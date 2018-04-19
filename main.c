@@ -49,7 +49,7 @@ struct gif_block_ext_app {
   unsigned char block_size;
   char application_identifier[9];
   char application_authentication_code[4];
-  unsigned char *application_data;
+  unsigned int application_data[2];
 };
 
 struct gif_block_ext_txt {
@@ -77,7 +77,6 @@ struct gif_block_image {
   unsigned int size_of_local_color_table;
   unsigned int *local_color_table;
   unsigned char lzw_minimum_code_side;
-//  unsigned char *image_data;
 };
 
 struct gif_block_frame {
@@ -105,7 +104,6 @@ static void write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, con
 
 static struct gif_block_frame *add_frame(struct gif_block_frame *prev_framep);
 static void dealloc_gif_header(struct gif_header *hp);
-static void dealloc_gif_app(struct gif_block_ext_app *appp);
 static void dealloc_gif_frames(struct gif_block_frame *frame);
 
 static void die_err(const char *msg);
@@ -153,7 +151,6 @@ main(int argc, char *argv[])
   free(bytes.buf);
   dealloc_gif_header(&h);
   dealloc_gif_frames(&first_frame);
-  dealloc_gif_app(&app);
 
   exit(0);
 }
@@ -246,10 +243,6 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
   unsigned char bits;
   int i;
   unsigned char block_size;
-//  int data_idx;
-//  unsigned int block_alloc_size;
-//  unsigned int block_total_size;
-//  unsigned char *p;
 
   if (framep->img != NULL) framep = add_frame(framep);
   framep->img = malloc(sizeof(struct gif_block_image));
@@ -281,30 +274,7 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
 
   framep->img->lzw_minimum_code_side = bytesp->buf[bytesp->idx++];
 
-//  data_idx = 0;
-//  block_alloc_size = 256;
-//  block_total_size = 0;
-//  framep->img->image_data = (unsigned char *) malloc(sizeof(unsigned char) * block_alloc_size);
-//  if (framep->img->image_data == NULL) die("[ERROR] could not allocate memory for image data of gif image block");
   while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
-//    block_total_size += block_size;
-//    if (block_total_size > block_alloc_size) {
-//      // block_alloc_size *= 2;
-//      block_alloc_size = block_total_size + block_size * 20;
-//      // FIXME: Why? realloc(): invalid next size
-//      // p = (unsigned char *) realloc(framep->img->image_data, sizeof(unsigned char) * block_alloc_size);
-//      p = (unsigned char *) malloc(sizeof(unsigned char) * block_alloc_size);
-//      if (p == NULL) {
-//        free(framep->img->image_data);
-//        die("[ERROR] could not reallocate memory for image data of gif image block");
-//      }
-//      memcpy(p, framep->img->image_data, sizeof(unsigned char) * block_alloc_size / 2);
-//      free(framep->img->image_data);
-//      framep->img->image_data = p;
-//    }
-//    for (i = 0; i < block_size; ++i) {
-//      framep->img->image_data[data_idx++] = bytesp->buf[bytesp->idx++];
-//    }
     bytesp->idx += block_size;
   }
 
@@ -366,10 +336,6 @@ read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
 {
   int i;
   unsigned char block_size;
-  int data_idx;
-  unsigned int block_alloc_size;
-  unsigned int block_total_size;
-  unsigned char *p;
 
   appp->block_size = bytesp->buf[bytesp->idx++];
 
@@ -383,26 +349,14 @@ read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
   }
   appp->application_authentication_code[3] = '\0';
 
-  data_idx = 0;
-  block_alloc_size = 16;
-  block_total_size = 0;
-  appp->application_data = (unsigned char *) malloc(sizeof(unsigned char) * block_alloc_size);
-  if (appp->application_data == NULL) die("[ERROR] could not allocate memory for application data of gif extension block");
-  while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
-    block_total_size += block_size;
-    if (block_total_size > block_alloc_size) {
-      block_alloc_size *= 2;
-      p = (unsigned char *) realloc(appp->application_data, sizeof(unsigned char) * block_alloc_size);
-      if (p == NULL) {
-        free(appp->application_data);
-        die("[ERROR] could not reallocate memory for application data of gif extension block");
-      }
-      appp->application_data = p;
-    }
-    for (i = 0; i < block_size; ++i) {
-      appp->application_data[data_idx++] = bytesp->buf[bytesp->idx++];
-    }
-  }
+  block_size = bytesp->buf[bytesp->idx++];
+  if (block_size != 3) die("[ERROR] not supported block size of application extension");
+
+  appp->application_data[0] = bytesp->buf[bytesp->idx++];
+  appp->application_data[1] = extract_data(&bytesp->buf[bytesp->idx], 2);
+  bytesp->idx += 2;
+
+  if (bytesp->buf[bytesp->idx] != '\0') die("[ERROR] failed to read from gif application extension block data");
 }
 
 static void
@@ -465,6 +419,8 @@ write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gi
   fprintf(fp, "  Block Size: %d\n", appp->block_size);
   fprintf(fp, "  Application Identifier: %s\n", appp->application_identifier);
   fprintf(fp, "  Application Authentication Code: %s\n", appp->application_authentication_code);
+  fprintf(fp, "  Application Data1: %d\n", appp->application_data[0]);
+  fprintf(fp, "  Application Data2: %d\n", appp->application_data[1]);
 
   for (i = 1; framep != NULL; framep = framep->next, ++i) {
     fprintf(fp, "Blocks[%ld]:\n", i);
@@ -534,17 +490,10 @@ dealloc_gif_frames(struct gif_block_frame *framep)
   while ((np = fp->next) != NULL) {
     free(fp->ctrl);
     free(fp->img->local_color_table);
-//    free(fp->img->image_data);
     free(fp->img);
     free(fp);
     fp = np;
   }
-}
-
-static void
-dealloc_gif_app(struct gif_block_ext_app *appp)
-{
-  free(appp->application_data);
 }
 
 static void
