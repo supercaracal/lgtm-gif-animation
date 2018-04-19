@@ -4,16 +4,16 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define BLOCK_TYPE_IMG 0x2c
-#define BLOCK_TYPE_EXT 0x21
+#define GIF_BLOCK_TYPE_IMG 0x2c
+#define GIF_BLOCK_TYPE_EXT 0x21
 
-#define EXT_LABEL_GRAPH_CTRL 0xf9
-#define EXT_LABEL_COMMENT 0xfe
-#define EXT_LABEL_PLAIN_TEXT 0x01
-#define EXT_LABEL_APP 0xff
+#define GIF_EXT_LABEL_GRAPH_CTRL 0xf9
+#define GIF_EXT_LABEL_COMMENT 0xfe
+#define GIF_EXT_LABEL_PLAIN_TEXT 0x01
+#define GIF_EXT_LABEL_APP 0xff
 
-#define TRAILER 0x3b
-#define NULL_BYTE 0x00
+#define GIF_TRAILER 0x3b
+#define GIF_NULL_BYTE 0x00
 
 struct gif_bytes {
   unsigned char *buf;
@@ -52,6 +52,19 @@ struct gif_block_ext_app {
   unsigned char *application_data;
 };
 
+struct gif_block_ext_txt {
+  unsigned char block_size;
+  unsigned int text_grid_left_position;
+  unsigned int text_grid_top_position;
+  unsigned int text_grid_width;
+  unsigned int text_grid_height;
+  unsigned char character_cell_width;
+  unsigned char character_cell_height;
+  unsigned char text_foreground_color_index;
+  unsigned char text_background_color_index;
+  unsigned char plain_text_data[5];
+};
+
 struct gif_block_image {
   unsigned int image_left_position;
   unsigned int image_top_position;
@@ -64,7 +77,7 @@ struct gif_block_image {
   unsigned int size_of_local_color_table;
   unsigned int *local_color_table;
   unsigned char lzw_minimum_code_side;
-  unsigned char *image_data;
+//  unsigned char *image_data;
 };
 
 struct gif_block_frame {
@@ -84,6 +97,8 @@ static void read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ex
 static void read_gif_block_ext_comment(struct gif_bytes *bytesp);
 static void read_gif_block_ext_plain_text(struct gif_bytes *bytesp);
 
+static void build_gif_block_ext_plain_text(struct gif_block_ext_txt *txtp, const struct gif_header *hp);
+
 static void write_gif_data(FILE *fp, const struct gif_bytes *bytesp);
 static void write_gif_header(FILE *fp, const struct gif_header *hp);
 static void write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gif_block_ext_app *appp);
@@ -97,6 +112,7 @@ static void die_err(const char *msg);
 static void die(const char *fmt, ...);
 static long calc_file_size(FILE *fp);
 static uint32_t extract_data(const unsigned char *bytes, int n);
+static void print_color_table(FILE *fp, unsigned int size, unsigned int *table, char *label);
 
 int
 main(int argc, char *argv[])
@@ -106,6 +122,7 @@ main(int argc, char *argv[])
   struct gif_header h;
   struct gif_block_frame first_frame;
   struct gif_block_ext_app app;
+  struct gif_block_ext_txt txt;
 
   if (argc == 1) {
     fp = stdin;
@@ -126,6 +143,8 @@ main(int argc, char *argv[])
   read_gif_data(fp, &bytes);
   read_gif_header(&bytes, &h);
   read_gif_blocks(&bytes, &first_frame, &app);
+
+  build_gif_block_ext_plain_text(&txt, &h);
 
   write_gif_header(stderr, &h);
   write_gif_blocks(stderr, &first_frame, &app);
@@ -187,7 +206,10 @@ read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp)
   if (hp->global_color_table_flag) {
     hp->global_color_table = malloc(hp->size_of_global_color_table);
     if (hp->global_color_table == NULL) die("[ERROR] could not allocate memory for global color table of gif header");
-    bytesp->idx += hp->size_of_global_color_table * 3;
+    for (i = 0; i < hp->size_of_global_color_table; ++i) {
+      hp->global_color_table[i] = extract_data(&bytesp->buf[bytesp->idx], 3);
+      bytesp->idx += 3;
+    }
   }
 }
 
@@ -199,16 +221,16 @@ read_gif_blocks(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct
   while (bytesp->idx < bytesp->size) {
     c = bytesp->buf[bytesp->idx++];
     switch (c) {
-      case BLOCK_TYPE_IMG:
+      case GIF_BLOCK_TYPE_IMG:
         framep = read_gif_block_img(bytesp, framep);
         break;
-      case BLOCK_TYPE_EXT:
+      case GIF_BLOCK_TYPE_EXT:
         framep = read_gif_block_ext(bytesp, framep, appp);
         break;
-      case NULL_BYTE:
+      case GIF_NULL_BYTE:
         fprintf(stderr, "[WARN] encountered null byte\n");
         break;
-      case TRAILER:
+      case GIF_TRAILER:
         fprintf(stderr, "[INFO] reached to trailer\n");
         break;
       default:
@@ -223,9 +245,11 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
 {
   unsigned char bits;
   int i;
-  int data_idx;
   unsigned char block_size;
-  unsigned long total_size;
+//  int data_idx;
+//  unsigned int block_alloc_size;
+//  unsigned int block_total_size;
+//  unsigned char *p;
 
   if (framep->img != NULL) framep = add_frame(framep);
   framep->img = malloc(sizeof(struct gif_block_image));
@@ -249,22 +273,39 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
   if (framep->img->local_color_table_flag) {
     framep->img->local_color_table = malloc(framep->img->size_of_local_color_table);
     if (framep->img->local_color_table == NULL) die("[ERROR] could not allocate memory for local color table of gif image block");
-    bytesp->idx += framep->img->size_of_local_color_table * 3;
+    for (i = 0; i < framep->img->size_of_local_color_table; ++i) {
+      framep->img->local_color_table[i] = extract_data(&bytesp->buf[bytesp->idx], 3);
+      bytesp->idx += 3;
+    }
   }
 
   framep->img->lzw_minimum_code_side = bytesp->buf[bytesp->idx++];
 
-  data_idx = 0;
-  total_size = 0;
-  framep->img->image_data = malloc(3);
-  if (framep->img->image_data == NULL) die("[ERROR] could not allocate memory for image data of gif image block");
+//  data_idx = 0;
+//  block_alloc_size = 256;
+//  block_total_size = 0;
+//  framep->img->image_data = (unsigned char *) malloc(sizeof(unsigned char) * block_alloc_size);
+//  if (framep->img->image_data == NULL) die("[ERROR] could not allocate memory for image data of gif image block");
   while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
-    total_size += block_size;
-    framep->img->image_data = realloc(framep->img->image_data, total_size);
-    if (framep->img->image_data == NULL) die("[ERROR] could not reallocate memory for image data of gif image block");
-    for (i = 0; i < block_size; ++i) {
-      framep->img->image_data[data_idx++] = bytesp->buf[bytesp->idx++];
-    }
+//    block_total_size += block_size;
+//    if (block_total_size > block_alloc_size) {
+//      // block_alloc_size *= 2;
+//      block_alloc_size = block_total_size + block_size * 20;
+//      // FIXME: Why? realloc(): invalid next size
+//      // p = (unsigned char *) realloc(framep->img->image_data, sizeof(unsigned char) * block_alloc_size);
+//      p = (unsigned char *) malloc(sizeof(unsigned char) * block_alloc_size);
+//      if (p == NULL) {
+//        free(framep->img->image_data);
+//        die("[ERROR] could not reallocate memory for image data of gif image block");
+//      }
+//      memcpy(p, framep->img->image_data, sizeof(unsigned char) * block_alloc_size / 2);
+//      free(framep->img->image_data);
+//      framep->img->image_data = p;
+//    }
+//    for (i = 0; i < block_size; ++i) {
+//      framep->img->image_data[data_idx++] = bytesp->buf[bytesp->idx++];
+//    }
+    bytesp->idx += block_size;
   }
 
   return framep;
@@ -274,16 +315,16 @@ struct gif_block_frame *
 read_gif_block_ext(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct gif_block_ext_app *appp)
 {
     switch (bytesp->buf[bytesp->idx++]) {
-      case EXT_LABEL_GRAPH_CTRL:
+      case GIF_EXT_LABEL_GRAPH_CTRL:
         framep = read_gif_block_ext_graph_ctrl(bytesp, framep);
         break;
-      case EXT_LABEL_APP:
+      case GIF_EXT_LABEL_APP:
         read_gif_block_ext_app(bytesp, appp);
         break;
-      case EXT_LABEL_COMMENT:
+      case GIF_EXT_LABEL_COMMENT:
         read_gif_block_ext_comment(bytesp);
         break;
-      case EXT_LABEL_PLAIN_TEXT:
+      case GIF_EXT_LABEL_PLAIN_TEXT:
         read_gif_block_ext_plain_text(bytesp);
         break;
       default:
@@ -324,9 +365,11 @@ static void
 read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
 {
   int i;
-  int data_idx;
   unsigned char block_size;
-  unsigned long total_size;
+  int data_idx;
+  unsigned int block_alloc_size;
+  unsigned int block_total_size;
+  unsigned char *p;
 
   appp->block_size = bytesp->buf[bytesp->idx++];
 
@@ -341,13 +384,21 @@ read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
   appp->application_authentication_code[3] = '\0';
 
   data_idx = 0;
-  total_size = 0;
-  appp->application_data = malloc(3);
+  block_alloc_size = 16;
+  block_total_size = 0;
+  appp->application_data = (unsigned char *) malloc(sizeof(unsigned char) * block_alloc_size);
   if (appp->application_data == NULL) die("[ERROR] could not allocate memory for application data of gif extension block");
   while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
-    total_size += block_size;
-    appp->application_data = realloc(appp->application_data, total_size);
-    if (appp->application_data == NULL) die("[ERROR] could not reallocate memory for application data of gif extension block");
+    block_total_size += block_size;
+    if (block_total_size > block_alloc_size) {
+      block_alloc_size *= 2;
+      p = (unsigned char *) realloc(appp->application_data, sizeof(unsigned char) * block_alloc_size);
+      if (p == NULL) {
+        free(appp->application_data);
+        die("[ERROR] could not reallocate memory for application data of gif extension block");
+      }
+      appp->application_data = p;
+    }
     for (i = 0; i < block_size; ++i) {
       appp->application_data[data_idx++] = bytesp->buf[bytesp->idx++];
     }
@@ -367,6 +418,25 @@ read_gif_block_ext_plain_text(struct gif_bytes *bytesp)
 }
 
 static void
+build_gif_block_ext_plain_text(struct gif_block_ext_txt *txtp, const struct gif_header *hp)
+{
+  txtp->block_size = 0x0c;
+  txtp->text_grid_left_position = 0;
+  txtp->text_grid_top_position = 0;
+  txtp->text_grid_width = hp->logical_screen_width;
+  txtp->text_grid_height = hp->logical_screen_height;
+  txtp->character_cell_width = 8;
+  txtp->character_cell_height = 16;
+  txtp->text_foreground_color_index = 0;
+  txtp->text_background_color_index = 0;
+  txtp->plain_text_data[0] = 'L';
+  txtp->plain_text_data[1] = 'G';
+  txtp->plain_text_data[2] = 'T';
+  txtp->plain_text_data[3] = 'M';
+  txtp->plain_text_data[4] = '\0';
+}
+
+static void
 write_gif_header(FILE *fp, const struct gif_header *hp)
 {
   fprintf(fp, "Headers\n");
@@ -380,6 +450,10 @@ write_gif_header(FILE *fp, const struct gif_header *hp)
   fprintf(fp, "  Size of Global Color Table: %d\n", hp->size_of_global_color_table);
   fprintf(fp, "  Background Color Index: %d\n", hp->background_color_index);
   fprintf(fp, "  Pixel Aspect Ratio: %d\n", hp->pixel_aspect_ratio);
+
+  if (hp->global_color_table_flag) {
+    print_color_table(fp, hp->size_of_global_color_table, hp->global_color_table, "Global Color Table");
+  }
 }
 
 static void
@@ -411,6 +485,10 @@ write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gi
     fprintf(fp, "  Reserved: %d\n", framep->img->reserved);
     fprintf(fp, "  Size of Local Color Table: %d\n", framep->img->size_of_local_color_table);
     fprintf(fp, "  LZW Minimum Code Side: %d\n", framep->img->lzw_minimum_code_side);
+
+    if (framep->img->local_color_table_flag) {
+      print_color_table(fp, framep->img->size_of_local_color_table, framep->img->local_color_table, "Local Color Table");
+    }
   }
 }
 
@@ -456,7 +534,7 @@ dealloc_gif_frames(struct gif_block_frame *framep)
   while ((np = fp->next) != NULL) {
     free(fp->ctrl);
     free(fp->img->local_color_table);
-    free(fp->img->image_data);
+//    free(fp->img->image_data);
     free(fp->img);
     free(fp);
     fp = np;
@@ -511,4 +589,25 @@ extract_data(const unsigned char *bytes, int n)
   }
 
   return ret;
+}
+
+static void
+print_color_table(FILE *fp, unsigned int size, unsigned int *table, char *label)
+{
+  uint32_t color;
+  unsigned int r;
+  unsigned int g;
+  unsigned int b;
+  unsigned int i;
+
+  fprintf(fp, "  %s: ", label);
+  for (i = 0; i < size; ++i) {
+    if (i > 0) fprintf(fp, ",");
+    color = table[i];
+    r = (color & 0x00ff0000) >> 16;
+    g = (color & 0x0000ff00) >> 8;
+    b = (color & 0x000000ff);
+    fprintf(fp, "(%d,%d,%d)", r, g, b);
+  }
+  fprintf(fp, "\n");
 }
