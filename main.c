@@ -13,6 +13,7 @@
 #define EXT_LABEL_APP 0xff
 
 #define TRAILER 0x3b
+#define NULL_BYTE 0x00
 
 struct gif_bytes {
   unsigned char *buf;
@@ -85,7 +86,7 @@ static void read_gif_block_ext_plain_text(struct gif_bytes *bytesp);
 
 static void write_gif_data(FILE *fp, const struct gif_bytes *bytesp);
 static void write_gif_header(FILE *fp, const struct gif_header *hp);
-static void write_gif_blocks(FILE *fp, struct gif_block_frame *framep, struct gif_block_ext_app *appp);
+static void write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gif_block_ext_app *appp);
 
 static struct gif_block_frame *add_frame(struct gif_block_frame *prev_framep);
 static void dealloc_gif_header(struct gif_header *hp);
@@ -116,7 +117,7 @@ main(int argc, char *argv[])
   bytes.idx = 0;
   bytes.size = calc_file_size(fp);
   bytes.buf = malloc(bytes.size);
-  if (bytes.buf == NULL) die("could not allocate memory for gif data");
+  if (bytes.buf == NULL) die("[ERROR] could not allocate memory for buffer of gif bytes");
 
   first_frame.ctrl = NULL;
   first_frame.img = NULL;
@@ -144,7 +145,7 @@ read_gif_data(FILE *fp, struct gif_bytes *bytesp)
   long n;
 
   n = fread(bytesp->buf, sizeof(unsigned char), bytesp->size, fp);
-  if (n != bytesp->size) die("failed to read from file");
+  if (n != bytesp->size) die("[ERROR] failed to read from file");
 }
 
 static void
@@ -158,14 +159,14 @@ read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp)
   }
   hp->signature[3] = '\0';
 
-  if (strcmp(hp->signature, "GIF")) die("not supported file");
+  if (strcmp(hp->signature, "GIF")) die("[ERROR] not supported file");
 
   for (i = 0; i < 3; ++i) {
     hp->version[i] = bytesp->buf[bytesp->idx++];
   }
   hp->version[3] = '\0';
 
-  if (!strcmp(hp->signature, "89a")) die("not supported gif version: %s", hp->signature);
+  if (!strcmp(hp->signature, "89a")) die("[ERROR] not supported gif version: %s", hp->signature);
 
   hp->logical_screen_width = extract_data(&bytesp->buf[bytesp->idx], 2);
   bytesp->idx += 2;
@@ -185,7 +186,7 @@ read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp)
 
   if (hp->global_color_table_flag) {
     hp->global_color_table = malloc(hp->size_of_global_color_table);
-    if (hp->global_color_table == NULL) die("could not allocate memory for global color table of gif header");
+    if (hp->global_color_table == NULL) die("[ERROR] could not allocate memory for global color table of gif header");
     bytesp->idx += hp->size_of_global_color_table * 3;
   }
 }
@@ -204,10 +205,14 @@ read_gif_blocks(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct
       case BLOCK_TYPE_EXT:
         framep = read_gif_block_ext(bytesp, framep, appp);
         break;
+      case NULL_BYTE:
+        fprintf(stderr, "[WARN] encountered null byte\n");
+        break;
       case TRAILER:
+        fprintf(stderr, "[INFO] reached to trailer\n");
         break;
       default:
-        fprintf(stderr, "[WARN] unknown block type: %d\n", c);
+        die("[ERROR] unknown block type: %d", c);
         break;
     }
   }
@@ -243,7 +248,7 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
 
   if (framep->img->local_color_table_flag) {
     framep->img->local_color_table = malloc(framep->img->size_of_local_color_table);
-    if (framep->img->local_color_table == NULL) die("could not allocate memory for local color table of gif image block");
+    if (framep->img->local_color_table == NULL) die("[ERROR] could not allocate memory for local color table of gif image block");
     bytesp->idx += framep->img->size_of_local_color_table * 3;
   }
 
@@ -252,11 +257,11 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
   data_idx = 0;
   total_size = 0;
   framep->img->image_data = malloc(3);
-  if (framep->img->image_data == NULL) die("could not allocate memory for image data of gif image block");
+  if (framep->img->image_data == NULL) die("[ERROR] could not allocate memory for image data of gif image block");
   while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
     total_size += block_size;
     framep->img->image_data = realloc(framep->img->image_data, total_size);
-    if (framep->img->image_data == NULL) die("could not allocate memory for image data of gif image block");
+    if (framep->img->image_data == NULL) die("[ERROR] could not reallocate memory for image data of gif image block");
     for (i = 0; i < block_size; ++i) {
       framep->img->image_data[data_idx++] = bytesp->buf[bytesp->idx++];
     }
@@ -282,7 +287,7 @@ read_gif_block_ext(struct gif_bytes *bytesp, struct gif_block_frame *framep, str
         read_gif_block_ext_plain_text(bytesp);
         break;
       default:
-        die("unknown extension block label");
+        die("[ERROR] unknown extension block label");
         break;
     }
 
@@ -310,7 +315,7 @@ read_gif_block_ext_graph_ctrl(struct gif_bytes *bytesp, struct gif_block_frame *
 
   framep->ctrl->transparent_color_index = bytesp->buf[bytesp->idx++];
 
-  if (bytesp->buf[bytesp->idx] != '\0') die("failed to read from gif graphic control extension block data");
+  if (bytesp->buf[bytesp->idx] != '\0') die("[ERROR] failed to read from gif graphic control extension block data");
 
   return framep;
 }
@@ -338,11 +343,11 @@ read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
   data_idx = 0;
   total_size = 0;
   appp->application_data = malloc(3);
-  if (appp->application_data == NULL) die("could not allocate memory for application data of gif extension block");
+  if (appp->application_data == NULL) die("[ERROR] could not allocate memory for application data of gif extension block");
   while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
     total_size += block_size;
     appp->application_data = realloc(appp->application_data, total_size);
-    if (appp->application_data == NULL) die("could not allocate memory for application data of gif extension block");
+    if (appp->application_data == NULL) die("[ERROR] could not reallocate memory for application data of gif extension block");
     for (i = 0; i < block_size; ++i) {
       appp->application_data[data_idx++] = bytesp->buf[bytesp->idx++];
     }
@@ -352,13 +357,13 @@ read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
 static void
 read_gif_block_ext_comment(struct gif_bytes *bytesp)
 {
-  die("not implemented yet comment extension block\n");
+  die("[ERROR] comment extension block is not implemented yet");
 }
 
 static void
 read_gif_block_ext_plain_text(struct gif_bytes *bytesp)
 {
-  die("not implemented yet plain text extension block\n");
+  die("[ERROR] plain text extension block is not implemented yet");
 }
 
 static void
@@ -378,7 +383,7 @@ write_gif_header(FILE *fp, const struct gif_header *hp)
 }
 
 static void
-write_gif_blocks(FILE *fp, struct gif_block_frame *framep, struct gif_block_ext_app *appp)
+write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gif_block_ext_app *appp)
 {
   unsigned long i;
 
@@ -414,7 +419,7 @@ write_gif_data(FILE *fp, const struct gif_bytes *bytesp)
 {
   long n;
   n = fwrite(bytesp->buf, sizeof(unsigned char), bytesp->size, fp);
-  if (n != bytesp->size) die("failed to write");
+  if (n != bytesp->size) die("[ERROR] failed to write of gif bytes");
 }
 
 static struct gif_block_frame *
@@ -423,7 +428,7 @@ add_frame(struct gif_block_frame *prev_framep)
   struct gif_block_frame *next_framep;
 
   next_framep = malloc(sizeof(struct gif_block_frame));
-  if (next_framep == NULL) die("could not allocate memory for frame of gif block");
+  if (next_framep == NULL) die("[ERROR] could not allocate memory for frame of gif block");
 
   next_framep->ctrl = NULL;
   next_framep->img = NULL;
