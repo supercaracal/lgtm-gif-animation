@@ -77,6 +77,7 @@ struct gif_block_image {
   unsigned int size_of_local_color_table;
   unsigned int *local_color_table;
   unsigned char lzw_minimum_code_side;
+  unsigned char *image_data;
 };
 
 struct gif_block_frame {
@@ -382,7 +383,7 @@ build_gif_block_ext_plain_text(struct gif_block_ext_txt *txtp, const struct gif_
   txtp->character_cell_width = 8;
   txtp->character_cell_height = 16;
   txtp->text_foreground_color_index = 0;
-  txtp->text_background_color_index = 0;
+  txtp->text_background_color_index = 1;
   txtp->plain_text_data[0] = 'L';
   txtp->plain_text_data[1] = 'G';
   txtp->plain_text_data[2] = 'T';
