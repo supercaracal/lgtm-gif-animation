@@ -475,9 +475,7 @@ add_frame(struct gif_block_frame *prev_framep)
 static void
 dealloc_gif_header(struct gif_header *hp)
 {
-  if (hp->global_color_table_flag) {
-    free(hp->global_color_table);
-  }
+  if (hp->global_color_table_flag) free(hp->global_color_table);
 }
 
 static void
@@ -489,7 +487,7 @@ dealloc_gif_frames(struct gif_block_frame *framep)
   fp = framep->next;
   while ((np = fp->next) != NULL) {
     free(fp->ctrl);
-    free(fp->img->local_color_table);
+    if (fp->img->local_color_table_flag) free(fp->img->local_color_table);
     free(fp->img);
     free(fp);
     fp = np;
