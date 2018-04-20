@@ -17,7 +17,7 @@
 
 struct gif_bytes {
   unsigned char *buf;
-  long size;
+  int size;
   unsigned int idx;
 };
 
@@ -77,7 +77,6 @@ struct gif_block_image {
   unsigned int size_of_local_color_table;
   unsigned int *local_color_table;
   unsigned char lzw_minimum_code_side;
-  unsigned char *image_data;
 };
 
 struct gif_block_frame {
@@ -414,7 +413,7 @@ write_gif_header(FILE *fp, const struct gif_header *hp)
 static void
 write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gif_block_ext_app *appp)
 {
-  unsigned long i;
+  int i;
 
   fprintf(fp, "Application Extension:\n");
   fprintf(fp, "  Block Size: %d\n", appp->block_size);
@@ -424,7 +423,7 @@ write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gi
   fprintf(fp, "  Application Data2: %d\n", appp->application_data[1]);
 
   for (i = 1; framep != NULL; framep = framep->next, ++i) {
-    fprintf(fp, "Blocks[%ld]:\n", i);
+    fprintf(fp, "Blocks[%d]:\n", i);
     fprintf(fp, "  Block Size: %d\n", framep->ctrl->block_size);
     fprintf(fp, "  Reserved: %d\n", framep->ctrl->reserved);
     fprintf(fp, "  Disposal Method: %d\n", framep->ctrl->disposal_method);
@@ -483,15 +482,15 @@ static void
 dealloc_gif_frames(struct gif_block_frame *framep)
 {
   struct gif_block_frame *fp;
-  struct gif_block_frame *np;
+  struct gif_block_frame *nfp;
 
   fp = framep->next;
-  while ((np = fp->next) != NULL) {
+  while ((nfp = fp->next) != NULL) {
     free(fp->ctrl);
     if (fp->img->local_color_table_flag) free(fp->img->local_color_table);
     free(fp->img);
     free(fp);
-    fp = np;
+    fp = nfp;
   }
 }
 
