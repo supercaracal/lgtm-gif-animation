@@ -100,7 +100,7 @@ static void dealloc_gif_frames(struct gif_block_frame *frame);
 
 static void die_err(const char *msg);
 static void die(const char *fmt, ...);
-static long calc_file_size(FILE *fp);
+static int calc_file_size(FILE *fp);
 static uint32_t extract_data(const unsigned char *bytes, int n);
 static void print_color_table(FILE *fp, unsigned int size, unsigned int *table, char *label);
 
@@ -151,7 +151,7 @@ main(int argc, char *argv[])
 static void
 read_gif_data(FILE *fp, struct gif_bytes *bytesp)
 {
-  long n;
+  int n;
 
   n = fread(bytesp->buf, sizeof(unsigned char), bytesp->size, fp);
   if (n != bytesp->size) die("[ERROR] failed to read from file");
@@ -498,7 +498,7 @@ write_gif_blocks(FILE *fp, const struct gif_block_frame *framep)
 static void
 write_gif_data(FILE *fp, const struct gif_bytes *bytesp)
 {
-  long n;
+  int n;
   n = fwrite(bytesp->buf, sizeof(unsigned char), bytesp->size, fp);
   if (n != bytesp->size) die("[ERROR] failed to write of gif bytes");
 }
@@ -560,10 +560,10 @@ die(const char *fmt, ...)
   exit(1);
 }
 
-static long
+static int
 calc_file_size(FILE *fp)
 {
-  long size;
+  int size;
 
   fseek(fp, 0, SEEK_END);
   size = ftell(fp);
@@ -577,9 +577,7 @@ extract_data(const unsigned char *bytes, int n)
   uint32_t ret;
   int i;
 
-  ret = 0;
-
-  for (i = 0; i < n; ++i) {
+  for (i = 0, ret = 0; i < n; ++i) {
     ret |= (bytes[i] << (8 * i));
   }
 
