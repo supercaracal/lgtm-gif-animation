@@ -21,7 +21,7 @@ struct gif_bytes {
   unsigned char *buf;
   int size;
   unsigned int idx;
-  unsigned int image_block_idx_last;
+  unsigned int last_idx_of_image_block;
 };
 
 struct gif_header {
@@ -271,7 +271,7 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
     bytesp->idx += block_size;
   }
 
-  bytesp->image_block_idx_last = bytesp->idx - 1;
+  bytesp->last_idx_of_image_block = bytesp->idx - 1;
 
   return framep;
 }
@@ -380,10 +380,10 @@ append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp)
   unsigned int j;
   unsigned int idx;
 
-  after_data_size = bytesp->size - bytesp->image_block_idx_last;
+  after_data_size = bytesp->size - bytesp->last_idx_of_image_block;
   after_data_buf = (unsigned char *) malloc(after_data_size);
   if (after_data_buf == NULL) die("[ERROR] could not allocate memory for lgtm bytes");
-  memcpy(after_data_buf, &bytesp->buf[bytesp->image_block_idx_last + 1], after_data_size);
+  memcpy(after_data_buf, &bytesp->buf[bytesp->last_idx_of_image_block + 1], after_data_size);
 
   total_size = bytesp->size + GIF_LGTM_DATA_SIZE;
   p = (unsigned char *) realloc(bytesp->buf, total_size);
@@ -424,7 +424,7 @@ append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp)
   lgtm_buf[i++] = 0;        // Block Size
   lgtm_buf[i++] = 0;        // Block Terminator
 
-  idx = bytesp->image_block_idx_last + 1;
+  idx = bytesp->last_idx_of_image_block + 1;
   for (j = 0; j < GIF_LGTM_DATA_SIZE; ++j) {
     bytesp->buf[idx++] = lgtm_buf[j];
   }
