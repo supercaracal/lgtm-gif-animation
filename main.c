@@ -218,10 +218,8 @@ read_gif_blocks(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct
         framep = read_gif_block_ext(bytesp, framep, appp);
         break;
       case GIF_NULL_BYTE:
-        fprintf(stderr, "[WARN] encountered null byte\n");
         break;
       case GIF_TRAILER:
-        fprintf(stderr, "[INFO] reached to trailer\n");
         break;
       default:
         die("[ERROR] unknown block type: %d", c);
@@ -399,8 +397,8 @@ append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp)
   lgtm_buf[i++] = GIF_EXT_LABEL_GRAPH_CTRL;
   lgtm_buf[i++] = 4;                       // Block Size
   lgtm_buf[i++] = 1 << 3;                  // Reserved | Disposal Method | User Input Flag | Transparent Color Flag
-  lgtm_buf[i++] = (255 & 0x000000ff);      // Delay Time
-  lgtm_buf[i++] = (255 & 0x0000ff00) >> 8; // Delay Time
+  lgtm_buf[i++] = (100 & 0x000000ff);      // Delay Time
+  lgtm_buf[i++] = (100 & 0x0000ff00) >> 8; // Delay Time
   lgtm_buf[i++] = 0;                       // Transparent Color Index
   lgtm_buf[i++] = 0;                       // Block Terminator
 
