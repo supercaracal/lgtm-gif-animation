@@ -15,10 +15,13 @@
 #define GIF_TRAILER 0x3b
 #define GIF_NULL_BYTE 0x00
 
+#define GIF_LGTM_DATA_SIZE 27
+
 struct gif_bytes {
   unsigned char *buf;
   int size;
   unsigned int idx;
+  unsigned int image_block_idx_last;
 };
 
 struct gif_header {
@@ -50,19 +53,7 @@ struct gif_block_ext_app {
   char application_identifier[9];
   char application_authentication_code[4];
   unsigned int application_data[2];
-};
-
-struct gif_block_ext_txt {
-  unsigned char block_size;
-  unsigned int text_grid_left_position;
-  unsigned int text_grid_top_position;
-  unsigned int text_grid_width;
-  unsigned int text_grid_height;
-  unsigned char character_cell_width;
-  unsigned char character_cell_height;
-  unsigned char text_foreground_color_index;
-  unsigned char text_background_color_index;
-  unsigned char plain_text_data[5];
+  char read_flag;
 };
 
 struct gif_block_image {
@@ -96,11 +87,12 @@ static void read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ex
 static void read_gif_block_ext_comment(struct gif_bytes *bytesp);
 static void read_gif_block_ext_plain_text(struct gif_bytes *bytesp);
 
-static void build_gif_block_ext_plain_text(struct gif_block_ext_txt *txtp, const struct gif_header *hp);
+static void append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp);
 
 static void write_gif_data(FILE *fp, const struct gif_bytes *bytesp);
 static void write_gif_header(FILE *fp, const struct gif_header *hp);
-static void write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gif_block_ext_app *appp);
+static void write_gif_ext_app(FILE *fp, const struct gif_block_ext_app *appp);
+static void write_gif_blocks(FILE *fp, const struct gif_block_frame *framep);
 
 static struct gif_block_frame *add_frame(struct gif_block_frame *prev_framep);
 static void dealloc_gif_header(struct gif_header *hp);
@@ -120,7 +112,6 @@ main(int argc, char *argv[])
   struct gif_header h;
   struct gif_block_frame first_frame;
   struct gif_block_ext_app app;
-  struct gif_block_ext_txt txt;
 
   if (argc == 1) {
     fp = stdin;
@@ -140,12 +131,14 @@ main(int argc, char *argv[])
 
   read_gif_data(fp, &bytes);
   read_gif_header(&bytes, &h);
+  app.read_flag = 0;
   read_gif_blocks(&bytes, &first_frame, &app);
 
-  build_gif_block_ext_plain_text(&txt, &h);
+  append_lgtm_bytes(&bytes, &h);
 
   write_gif_header(stderr, &h);
-  write_gif_blocks(stderr, &first_frame, &app);
+  write_gif_ext_app(stderr, &app);
+  write_gif_blocks(stderr, &first_frame);
   write_gif_data(stdout, &bytes);
 
   free(bytes.buf);
@@ -278,6 +271,8 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
     bytesp->idx += block_size;
   }
 
+  bytesp->image_block_idx_last = bytesp->idx - 1;
+
   return framep;
 }
 
@@ -357,6 +352,8 @@ read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
   bytesp->idx += 2;
 
   if (bytesp->buf[bytesp->idx] != '\0') die("[ERROR] failed to read from gif application extension block data");
+
+  appp->read_flag = 1;
 }
 
 static void
@@ -372,22 +369,69 @@ read_gif_block_ext_plain_text(struct gif_bytes *bytesp)
 }
 
 static void
-build_gif_block_ext_plain_text(struct gif_block_ext_txt *txtp, const struct gif_header *hp)
+append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp)
 {
-  txtp->block_size = 0x0c;
-  txtp->text_grid_left_position = 0;
-  txtp->text_grid_top_position = 0;
-  txtp->text_grid_width = hp->logical_screen_width;
-  txtp->text_grid_height = hp->logical_screen_height;
-  txtp->character_cell_width = 8;
-  txtp->character_cell_height = 16;
-  txtp->text_foreground_color_index = 0;
-  txtp->text_background_color_index = 1;
-  txtp->plain_text_data[0] = 'L';
-  txtp->plain_text_data[1] = 'G';
-  txtp->plain_text_data[2] = 'T';
-  txtp->plain_text_data[3] = 'M';
-  txtp->plain_text_data[4] = '\0';
+  unsigned char *after_data_buf;
+  unsigned int after_data_size;
+  unsigned int total_size;
+  unsigned char lgtm_buf[GIF_LGTM_DATA_SIZE];
+  unsigned char *p;
+  unsigned int i;
+  unsigned int j;
+  unsigned int idx;
+
+  after_data_size = bytesp->size - bytesp->image_block_idx_last;
+  after_data_buf = (unsigned char *) malloc(after_data_size);
+  if (after_data_buf == NULL) die("[ERROR] could not allocate memory for lgtm bytes");
+  memcpy(after_data_buf, &bytesp->buf[bytesp->image_block_idx_last + 1], after_data_size);
+
+  total_size = bytesp->size + GIF_LGTM_DATA_SIZE;
+  p = (unsigned char *) realloc(bytesp->buf, total_size);
+  if (p == NULL) {
+    free(bytesp->buf);
+    die("[ERROR] could not reallocate memory for lgtm bytes");
+  }
+  bytesp->buf = p;
+  bytesp->size = total_size;
+
+  i = 0;
+  lgtm_buf[i++] = GIF_BLOCK_TYPE_EXT;
+  lgtm_buf[i++] = GIF_EXT_LABEL_GRAPH_CTRL;
+  lgtm_buf[i++] = 4;                       // Block Size
+  lgtm_buf[i++] = 1 << 3;                  // Reserved | Disposal Method | User Input Flag | Transparent Color Flag
+  lgtm_buf[i++] = (255 & 0x000000ff);      // Delay Time
+  lgtm_buf[i++] = (255 & 0x0000ff00) >> 8; // Delay Time
+  lgtm_buf[i++] = 0;                       // Transparent Color Index
+  lgtm_buf[i++] = 0;                       // Block Terminator
+
+  lgtm_buf[i++] = GIF_BLOCK_TYPE_IMG;
+  lgtm_buf[i++] = 0; // Image Left Position
+  lgtm_buf[i++] = 0; // Image Left Position
+  lgtm_buf[i++] = 0; // Image Top Position
+  lgtm_buf[i++] = 0; // Image Top Position
+  lgtm_buf[i++] = (hp->logical_screen_width & 0x000000ff);       // Image Width
+  lgtm_buf[i++] = (hp->logical_screen_width & 0x0000ff00) >> 8;  // Image Width
+  lgtm_buf[i++] = (hp->logical_screen_height & 0x000000ff);      // Image Height
+  lgtm_buf[i++] = (hp->logical_screen_height & 0x0000ff00) >> 8; // Image Height
+  lgtm_buf[i++] = (1 << 7); // Local Color Table Flag | Interlace Flag | Sort Flag | Reserved | Size of Local Color Table
+  lgtm_buf[i++] = 250; // Local Color Table[0]
+  lgtm_buf[i++] = 250; // Local Color Table[0]
+  lgtm_buf[i++] = 250; // Local Color Table[0]
+  lgtm_buf[i++] = 10; // Local Color Table[1]
+  lgtm_buf[i++] = 10; // Local Color Table[1]
+  lgtm_buf[i++] = 10; // Local Color Table[1]
+  lgtm_buf[i++] = 8; // LZW Minimum Code Size
+  lgtm_buf[i++] = 0; // Block Size
+  lgtm_buf[i++] = 0; // Block Terminator
+
+  idx = bytesp->image_block_idx_last + 1;
+  for (j = 0; j < GIF_LGTM_DATA_SIZE; ++j) {
+    bytesp->buf[idx++] = lgtm_buf[j];
+  }
+  for (i = 0; i < after_data_size; ++i) {
+    bytesp->buf[idx++] = after_data_buf[i];
+  }
+  free(after_data_buf);
 }
 
 static void
@@ -411,16 +455,21 @@ write_gif_header(FILE *fp, const struct gif_header *hp)
 }
 
 static void
-write_gif_blocks(FILE *fp, const struct gif_block_frame *framep, const struct gif_block_ext_app *appp)
+write_gif_ext_app(FILE *fp, const struct gif_block_ext_app *appp)
 {
-  int i;
-
+  if (!appp->read_flag) return;
   fprintf(fp, "Application Extension:\n");
   fprintf(fp, "  Block Size: %d\n", appp->block_size);
   fprintf(fp, "  Application Identifier: %s\n", appp->application_identifier);
   fprintf(fp, "  Application Authentication Code: %s\n", appp->application_authentication_code);
   fprintf(fp, "  Application Data1: %d\n", appp->application_data[0]);
   fprintf(fp, "  Application Data2: %d\n", appp->application_data[1]);
+}
+
+static void
+write_gif_blocks(FILE *fp, const struct gif_block_frame *framep)
+{
+  int i;
 
   for (i = 1; framep != NULL; framep = framep->next, ++i) {
     fprintf(fp, "Blocks[%d]:\n", i);
@@ -485,6 +534,7 @@ dealloc_gif_frames(struct gif_block_frame *framep)
   struct gif_block_frame *nfp;
 
   fp = framep->next;
+  if (fp == NULL) return;
   while ((nfp = fp->next) != NULL) {
     free(fp->ctrl);
     if (fp->img->local_color_table_flag) free(fp->img->local_color_table);
