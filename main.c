@@ -401,10 +401,10 @@ append_lgtm_bytes(struct gif_bytes *bytesp)
   bytesp->buf[bytesp->idx++] = GIF_BLOCK_TYPE_EXT;
   bytesp->buf[bytesp->idx++] = GIF_EXT_LABEL_GRAPH_CTRL;
   bytesp->buf[bytesp->idx++] = 4;                       // Block Size
-  bytesp->buf[bytesp->idx++] = 1 << 3;                  // Reserved | Disposal Method | User Input Flag | Transparent Color Flag
+  bytesp->buf[bytesp->idx++] = (1 << 3) | 1;            // Reserved | Disposal Method | User Input Flag | Transparent Color Flag
   bytesp->buf[bytesp->idx++] = (100 & 0x000000ff);      // Delay Time
   bytesp->buf[bytesp->idx++] = (100 & 0x0000ff00) >> 8; // Delay Time
-  bytesp->buf[bytesp->idx++] = 0;                       // Transparent Color Index
+  bytesp->buf[bytesp->idx++] = 252;                     // Transparent Color Index
   bytesp->buf[bytesp->idx++] = 0;                       // Block Terminator
 
   bytesp->buf[bytesp->idx++] = GIF_BLOCK_TYPE_IMG;
