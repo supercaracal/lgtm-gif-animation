@@ -1,6 +1,6 @@
 # LGTM GIF ANIMATION
 
-I want to get LGTM gif animation file. So I am implementing tool now. WIP.
+Add LGTM to gif animation file
 
 ## Usage
 
