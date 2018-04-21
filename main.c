@@ -405,24 +405,24 @@ append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp)
   lgtm_buf[i++] = 0;                       // Block Terminator
 
   lgtm_buf[i++] = GIF_BLOCK_TYPE_IMG;
-  lgtm_buf[i++] = 0; // Image Left Position
-  lgtm_buf[i++] = 0; // Image Left Position
-  lgtm_buf[i++] = 0; // Image Top Position
-  lgtm_buf[i++] = 0; // Image Top Position
+  lgtm_buf[i++] = 0;        // Image Left Position
+  lgtm_buf[i++] = 0;        // Image Left Position
+  lgtm_buf[i++] = 0;        // Image Top Position
+  lgtm_buf[i++] = 0;        // Image Top Position
   lgtm_buf[i++] = (hp->logical_screen_width & 0x000000ff);       // Image Width
   lgtm_buf[i++] = (hp->logical_screen_width & 0x0000ff00) >> 8;  // Image Width
   lgtm_buf[i++] = (hp->logical_screen_height & 0x000000ff);      // Image Height
   lgtm_buf[i++] = (hp->logical_screen_height & 0x0000ff00) >> 8; // Image Height
   lgtm_buf[i++] = (1 << 7); // Local Color Table Flag | Interlace Flag | Sort Flag | Reserved | Size of Local Color Table
-  lgtm_buf[i++] = 250; // Local Color Table[0]
-  lgtm_buf[i++] = 250; // Local Color Table[0]
-  lgtm_buf[i++] = 250; // Local Color Table[0]
-  lgtm_buf[i++] = 10; // Local Color Table[1]
-  lgtm_buf[i++] = 10; // Local Color Table[1]
-  lgtm_buf[i++] = 10; // Local Color Table[1]
-  lgtm_buf[i++] = 8; // LZW Minimum Code Size
-  lgtm_buf[i++] = 0; // Block Size
-  lgtm_buf[i++] = 0; // Block Terminator
+  lgtm_buf[i++] = 250;      // Local Color Table[0]
+  lgtm_buf[i++] = 250;      // Local Color Table[0]
+  lgtm_buf[i++] = 250;      // Local Color Table[0]
+  lgtm_buf[i++] = 10;       // Local Color Table[1]
+  lgtm_buf[i++] = 10;       // Local Color Table[1]
+  lgtm_buf[i++] = 10;       // Local Color Table[1]
+  lgtm_buf[i++] = 8;        // LZW Minimum Code Size
+  lgtm_buf[i++] = 0;        // Block Size
+  lgtm_buf[i++] = 0;        // Block Terminator
 
   idx = bytesp->image_block_idx_last + 1;
   for (j = 0; j < GIF_LGTM_DATA_SIZE; ++j) {
