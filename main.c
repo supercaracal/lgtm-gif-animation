@@ -15,13 +15,13 @@
 #define GIF_TRAILER 0x3b
 #define GIF_NULL_BYTE 0x00
 
-#define GIF_LGTM_DATA_SIZE 27
+#define GIF_LGTM_DATA_SIZE (2048 + 1889 + 8 + 13)
 
 struct gif_bytes {
   unsigned char *buf;
   int size;
-  unsigned int idx;
-  unsigned int last_idx_of_image_block;
+  int idx;
+  int last_idx_of_image_block;
 };
 
 struct gif_header {
@@ -87,7 +87,7 @@ static void read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ex
 static void read_gif_block_ext_comment(struct gif_bytes *bytesp);
 static void read_gif_block_ext_plain_text(struct gif_bytes *bytesp);
 
-static void append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp);
+static void append_lgtm_bytes(struct gif_bytes *bytesp);
 
 static void write_gif_data(FILE *fp, const struct gif_bytes *bytesp);
 static void write_gif_header(FILE *fp, const struct gif_header *hp);
@@ -103,6 +103,7 @@ static void die(const char *fmt, ...);
 static int calc_file_size(FILE *fp);
 static uint32_t extract_data(const unsigned char *bytes, int n);
 static void print_color_table(FILE *fp, unsigned int size, unsigned int *table, char *label);
+static void read_dat_file(const char *file_name, struct gif_bytes *bytesp);
 
 int
 main(int argc, char *argv[])
@@ -134,7 +135,7 @@ main(int argc, char *argv[])
   app.read_flag = 0;
   read_gif_blocks(&bytes, &first_frame, &app);
 
-  append_lgtm_bytes(&bytes, &h);
+  append_lgtm_bytes(&bytes);
 
   write_gif_header(stderr, &h);
   write_gif_ext_app(stderr, &app);
@@ -184,9 +185,9 @@ read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp)
 
   bits = bytesp->buf[bytesp->idx++];
 
-  hp->global_color_table_flag = ((bits & (1 << 7)) >> 7);
-  hp->color_resolution = (bits << 1 >> 5) + 1;
-  hp->sort_flag = ((bits & (1 << 3)) >> 3);
+  hp->global_color_table_flag = (bits & (1 << 7)) >> 7;
+  hp->color_resolution = (bits & ((1 << 6) | (1 << 5) | (1 << 4)) >> 4) + 1;
+  hp->sort_flag = (bits & (1 << 3)) >> 3;
   hp->size_of_global_color_table = 1 << ((bits & ((1 << 2) | (1 << 1) | 1)) + 1);
 
   hp->background_color_index = bytesp->buf[bytesp->idx++];
@@ -222,7 +223,7 @@ read_gif_blocks(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct
       case GIF_TRAILER:
         break;
       default:
-        die("[ERROR] unknown block type: %d", c);
+        die("[ERROR] unknown block type: %u", c);
         break;
     }
   }
@@ -233,7 +234,7 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
 {
   unsigned char bits;
   int i;
-  unsigned char block_size;
+  int block_size;
 
   if (framep->img != NULL) framep = add_frame(framep);
   framep->img = malloc(sizeof(struct gif_block_image));
@@ -249,11 +250,11 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
   bytesp->idx += 2;
 
   bits = bytesp->buf[bytesp->idx++];
-  framep->img->local_color_table_flag = (bits >> 7);
-  framep->img->interlace_flag = (bits & (1 << 6) >> 6);
-  framep->img->sort_flag = (bits & (1 << 5) >> 5);
-  framep->img->reserved = ((bits & (1 << 4)) | (bits & (1 << 3)) >> 3);
-  framep->img->size_of_local_color_table = (1 << ((bits << 5 >> 5) + 1));
+  framep->img->local_color_table_flag = bits >> 7;
+  framep->img->interlace_flag = bits & (1 << 6) >> 6;
+  framep->img->sort_flag = bits & (1 << 5) >> 5;
+  framep->img->reserved = (bits & (1 << 4)) | (bits & (1 << 3)) >> 3;
+  framep->img->size_of_local_color_table = 2 << (bits & ((1 << 2) | (1 << 1) | 1));
 
   if (framep->img->local_color_table_flag) {
     framep->img->local_color_table = malloc(framep->img->size_of_local_color_table);
@@ -311,10 +312,10 @@ read_gif_block_ext_graph_ctrl(struct gif_bytes *bytesp, struct gif_block_frame *
   framep->ctrl->block_size = bytesp->buf[bytesp->idx++];
 
   bits = bytesp->buf[bytesp->idx++];
-  framep->ctrl->reserved = (bits >> 5);
-  framep->ctrl->disposal_method = (bits & ((1 << 4) | (1 << 3) | (1 << 2)) >> 2);
-  framep->ctrl->user_input_flag = ((bits & (1 << 1)) >> 1);
-  framep->ctrl->transparent_color_flag = (bits & 1);
+  framep->ctrl->reserved = bits >> 5;
+  framep->ctrl->disposal_method = bits & ((1 << 4) | (1 << 3) | (1 << 2)) >> 2;
+  framep->ctrl->user_input_flag = (bits & (1 << 1)) >> 1;
+  framep->ctrl->transparent_color_flag = bits & 1;
 
   framep->ctrl->delay_time = extract_data(&bytesp->buf[bytesp->idx], 2);
   bytesp->idx += 2;
@@ -330,7 +331,7 @@ static void
 read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
 {
   int i;
-  unsigned char block_size;
+  int block_size;
 
   appp->block_size = bytesp->buf[bytesp->idx++];
 
@@ -369,16 +370,13 @@ read_gif_block_ext_plain_text(struct gif_bytes *bytesp)
 }
 
 static void
-append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp)
+append_lgtm_bytes(struct gif_bytes *bytesp)
 {
   unsigned char *after_data_buf;
   unsigned int after_data_size;
   unsigned int total_size;
-  unsigned char lgtm_buf[GIF_LGTM_DATA_SIZE];
   unsigned char *p;
   unsigned int i;
-  unsigned int j;
-  unsigned int idx;
 
   after_data_size = bytesp->size - bytesp->last_idx_of_image_block;
   after_data_buf = (unsigned char *) malloc(after_data_size);
@@ -393,44 +391,37 @@ append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp)
   }
   bytesp->buf = p;
   bytesp->size = total_size;
+  bytesp->idx = bytesp->last_idx_of_image_block + 1;
 
-  i = 0;
-  lgtm_buf[i++] = GIF_BLOCK_TYPE_EXT;
-  lgtm_buf[i++] = GIF_EXT_LABEL_GRAPH_CTRL;
-  lgtm_buf[i++] = 4;                       // Block Size
-  lgtm_buf[i++] = 1 << 3;                  // Reserved | Disposal Method | User Input Flag | Transparent Color Flag
-  lgtm_buf[i++] = (100 & 0x000000ff);      // Delay Time
-  lgtm_buf[i++] = (100 & 0x0000ff00) >> 8; // Delay Time
-  lgtm_buf[i++] = 0;                       // Transparent Color Index
-  lgtm_buf[i++] = 0;                       // Block Terminator
+  bytesp->buf[bytesp->idx++] = GIF_BLOCK_TYPE_EXT;
+  bytesp->buf[bytesp->idx++] = GIF_EXT_LABEL_GRAPH_CTRL;
+  bytesp->buf[bytesp->idx++] = 4;                       // Block Size
+  bytesp->buf[bytesp->idx++] = 1 << 3;                  // Reserved | Disposal Method | User Input Flag | Transparent Color Flag
+  bytesp->buf[bytesp->idx++] = (100 & 0x000000ff);      // Delay Time
+  bytesp->buf[bytesp->idx++] = (100 & 0x0000ff00) >> 8; // Delay Time
+  bytesp->buf[bytesp->idx++] = 0;                       // Transparent Color Index
+  bytesp->buf[bytesp->idx++] = 0;                       // Block Terminator
 
-  lgtm_buf[i++] = GIF_BLOCK_TYPE_IMG;
-  lgtm_buf[i++] = 0;        // Image Left Position
-  lgtm_buf[i++] = 0;        // Image Left Position
-  lgtm_buf[i++] = 0;        // Image Top Position
-  lgtm_buf[i++] = 0;        // Image Top Position
-  lgtm_buf[i++] = (hp->logical_screen_width & 0x000000ff);       // Image Width
-  lgtm_buf[i++] = (hp->logical_screen_width & 0x0000ff00) >> 8;  // Image Width
-  lgtm_buf[i++] = (hp->logical_screen_height & 0x000000ff);      // Image Height
-  lgtm_buf[i++] = (hp->logical_screen_height & 0x0000ff00) >> 8; // Image Height
-  lgtm_buf[i++] = (1 << 7); // Local Color Table Flag | Interlace Flag | Sort Flag | Reserved | Size of Local Color Table
-  lgtm_buf[i++] = 250;      // Local Color Table[0]
-  lgtm_buf[i++] = 250;      // Local Color Table[0]
-  lgtm_buf[i++] = 250;      // Local Color Table[0]
-  lgtm_buf[i++] = 10;       // Local Color Table[1]
-  lgtm_buf[i++] = 10;       // Local Color Table[1]
-  lgtm_buf[i++] = 10;       // Local Color Table[1]
-  lgtm_buf[i++] = 8;        // LZW Minimum Code Size
-  lgtm_buf[i++] = 0;        // Block Size
-  lgtm_buf[i++] = 0;        // Block Terminator
+  bytesp->buf[bytesp->idx++] = GIF_BLOCK_TYPE_IMG;
+  bytesp->buf[bytesp->idx++] = 0;                       // Image Left Position
+  bytesp->buf[bytesp->idx++] = 0;                       // Image Left Position
+  bytesp->buf[bytesp->idx++] = 0;                       // Image Top Position
+  bytesp->buf[bytesp->idx++] = 0;                       // Image Top Position
+  bytesp->buf[bytesp->idx++] = (128 & 0x000000ff);      // Image Width
+  bytesp->buf[bytesp->idx++] = (128 & 0x0000ff00) >> 8; // Image Width
+  bytesp->buf[bytesp->idx++] = (64 & 0x000000ff);       // Image Height
+  bytesp->buf[bytesp->idx++] = (64 & 0x0000ff00) >> 8;  // Image Height
+  bytesp->buf[bytesp->idx++] = (1 << 7) | (1 << 2) | (1 << 1) | 1; // Local Color Table Flag | Interlace Flag | Sort Flag | Reserved | Size of Local Color Table
+  read_dat_file("lgtm_colors.dat", bytesp);             // Local Color Table
+  bytesp->buf[bytesp->idx++] = 8;                       // LZW Minimum Code Size
+  read_dat_file("lgtm_blocks.dat", bytesp);             // Block Data
+  bytesp->buf[bytesp->idx++] = 0;                       // Block Size
+  bytesp->buf[bytesp->idx++] = 0;                       // Block Terminator
 
-  idx = bytesp->last_idx_of_image_block + 1;
-  for (j = 0; j < GIF_LGTM_DATA_SIZE; ++j) {
-    bytesp->buf[idx++] = lgtm_buf[j];
-  }
   for (i = 0; i < after_data_size; ++i) {
-    bytesp->buf[idx++] = after_data_buf[i];
+    bytesp->buf[bytesp->idx++] = after_data_buf[i];
   }
+
   free(after_data_buf);
 }
 
@@ -442,12 +433,12 @@ write_gif_header(FILE *fp, const struct gif_header *hp)
   fprintf(fp, "  Version: %s\n", hp->version);
   fprintf(fp, "  Logical Screen Width: %u\n", hp->logical_screen_width);
   fprintf(fp, "  Logical Screen Height: %u\n", hp->logical_screen_height);
-  fprintf(fp, "  Global Color Table Flag: %d\n", hp->global_color_table_flag);
-  fprintf(fp, "  Color Resolution: %d\n", hp->color_resolution);
-  fprintf(fp, "  Sort Flag: %d\n", hp->sort_flag);
-  fprintf(fp, "  Size of Global Color Table: %d\n", hp->size_of_global_color_table);
-  fprintf(fp, "  Background Color Index: %d\n", hp->background_color_index);
-  fprintf(fp, "  Pixel Aspect Ratio: %d\n", hp->pixel_aspect_ratio);
+  fprintf(fp, "  Global Color Table Flag: %u\n", hp->global_color_table_flag);
+  fprintf(fp, "  Color Resolution: %u\n", hp->color_resolution);
+  fprintf(fp, "  Sort Flag: %u\n", hp->sort_flag);
+  fprintf(fp, "  Size of Global Color Table: %u\n", hp->size_of_global_color_table);
+  fprintf(fp, "  Background Color Index: %u\n", hp->background_color_index);
+  fprintf(fp, "  Pixel Aspect Ratio: %u\n", hp->pixel_aspect_ratio);
 
   if (hp->global_color_table_flag) {
     print_color_table(fp, hp->size_of_global_color_table, hp->global_color_table, "Global Color Table");
@@ -459,11 +450,11 @@ write_gif_ext_app(FILE *fp, const struct gif_block_ext_app *appp)
 {
   if (!appp->read_flag) return;
   fprintf(fp, "Application Extension:\n");
-  fprintf(fp, "  Block Size: %d\n", appp->block_size);
+  fprintf(fp, "  Block Size: %u\n", appp->block_size);
   fprintf(fp, "  Application Identifier: %s\n", appp->application_identifier);
   fprintf(fp, "  Application Authentication Code: %s\n", appp->application_authentication_code);
-  fprintf(fp, "  Application Data1: %d\n", appp->application_data[0]);
-  fprintf(fp, "  Application Data2: %d\n", appp->application_data[1]);
+  fprintf(fp, "  Application Data1: %u\n", appp->application_data[0]);
+  fprintf(fp, "  Application Data2: %u\n", appp->application_data[1]);
 }
 
 static void
@@ -473,23 +464,23 @@ write_gif_blocks(FILE *fp, const struct gif_block_frame *framep)
 
   for (i = 1; framep != NULL; framep = framep->next, ++i) {
     fprintf(fp, "Blocks[%d]:\n", i);
-    fprintf(fp, "  Block Size: %d\n", framep->ctrl->block_size);
-    fprintf(fp, "  Reserved: %d\n", framep->ctrl->reserved);
-    fprintf(fp, "  Disposal Method: %d\n", framep->ctrl->disposal_method);
-    fprintf(fp, "  User Input Flag: %d\n", framep->ctrl->user_input_flag);
-    fprintf(fp, "  Transparent Color Flag: %d\n", framep->ctrl->transparent_color_flag);
-    fprintf(fp, "  Delay Time: %d\n", framep->ctrl->delay_time);
-    fprintf(fp, "  Transparent Color Index: %d\n", framep->ctrl->transparent_color_index);
-    fprintf(fp, "  Image Left Position: %d\n", framep->img->image_left_position);
-    fprintf(fp, "  Image Top Position: %d\n", framep->img->image_top_position);
-    fprintf(fp, "  Image Width: %d\n", framep->img->image_witdh);
-    fprintf(fp, "  Image Height: %d\n", framep->img->image_height);
-    fprintf(fp, "  Local Color Table Flag: %d\n", framep->img->local_color_table_flag);
-    fprintf(fp, "  Interlace Flag: %d\n", framep->img->interlace_flag);
-    fprintf(fp, "  Sort Flag: %d\n", framep->img->sort_flag);
-    fprintf(fp, "  Reserved: %d\n", framep->img->reserved);
-    fprintf(fp, "  Size of Local Color Table: %d\n", framep->img->size_of_local_color_table);
-    fprintf(fp, "  LZW Minimum Code Side: %d\n", framep->img->lzw_minimum_code_side);
+    fprintf(fp, "  Block Size: %u\n", framep->ctrl->block_size);
+    fprintf(fp, "  Reserved: %u\n", framep->ctrl->reserved);
+    fprintf(fp, "  Disposal Method: %u\n", framep->ctrl->disposal_method);
+    fprintf(fp, "  User Input Flag: %u\n", framep->ctrl->user_input_flag);
+    fprintf(fp, "  Transparent Color Flag: %u\n", framep->ctrl->transparent_color_flag);
+    fprintf(fp, "  Delay Time: %u\n", framep->ctrl->delay_time);
+    fprintf(fp, "  Transparent Color Index: %u\n", framep->ctrl->transparent_color_index);
+    fprintf(fp, "  Image Left Position: %u\n", framep->img->image_left_position);
+    fprintf(fp, "  Image Top Position: %u\n", framep->img->image_top_position);
+    fprintf(fp, "  Image Width: %u\n", framep->img->image_witdh);
+    fprintf(fp, "  Image Height: %u\n", framep->img->image_height);
+    fprintf(fp, "  Local Color Table Flag: %u\n", framep->img->local_color_table_flag);
+    fprintf(fp, "  Interlace Flag: %u\n", framep->img->interlace_flag);
+    fprintf(fp, "  Sort Flag: %u\n", framep->img->sort_flag);
+    fprintf(fp, "  Reserved: %u\n", framep->img->reserved);
+    fprintf(fp, "  Size of Local Color Table: %u\n", framep->img->size_of_local_color_table);
+    fprintf(fp, "  LZW Minimum Code Side: %u\n", framep->img->lzw_minimum_code_side);
 
     if (framep->img->local_color_table_flag) {
       print_color_table(fp, framep->img->size_of_local_color_table, framep->img->local_color_table, "Local Color Table");
@@ -602,7 +593,25 @@ print_color_table(FILE *fp, unsigned int size, unsigned int *table, char *label)
     r = (color & 0x00ff0000) >> 16;
     g = (color & 0x0000ff00) >> 8;
     b = (color & 0x000000ff);
-    fprintf(fp, "(%d,%d,%d)", r, g, b);
+    fprintf(fp, "(%u,%u,%u)", r, g, b);
   }
   fprintf(fp, "\n");
+}
+
+static void
+read_dat_file(const char *file_name, struct gif_bytes *bytesp)
+{
+  FILE *fp;
+  int size;
+  int n;
+
+  fp = fopen(file_name, "r");
+  if (fp == NULL) die_err(file_name);
+
+  size = calc_file_size(fp);
+
+  n = fread(&bytesp->buf[bytesp->idx], sizeof(unsigned char), size, fp);
+  if (n != size) die("[ERROR] failed to read from dat file");
+
+  bytesp->idx += size;
 }
