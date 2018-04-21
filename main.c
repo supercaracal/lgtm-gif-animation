@@ -237,6 +237,7 @@ read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep)
 
   if (framep->img != NULL) framep = add_frame(framep);
   framep->img = malloc(sizeof(struct gif_block_image));
+  if (framep->img == NULL) die("[ERROR] could not allocate memory for gif image block");
 
   framep->img->image_left_position = extract_data(&bytesp->buf[bytesp->idx], 2);
   bytesp->idx += 2;
@@ -305,6 +306,7 @@ read_gif_block_ext_graph_ctrl(struct gif_bytes *bytesp, struct gif_block_frame *
 
   if (framep->ctrl != NULL) framep = add_frame(framep);
   framep->ctrl = malloc(sizeof(struct gif_block_ext_gp_ctrl));
+  if (framep->ctrl == NULL) die("[ERROR] could not allocate memory for gif graphic control extension");
 
   framep->ctrl->block_size = bytesp->buf[bytesp->idx++];
 
@@ -509,7 +511,7 @@ add_frame(struct gif_block_frame *prev_framep)
   struct gif_block_frame *next_framep;
 
   next_framep = malloc(sizeof(struct gif_block_frame));
-  if (next_framep == NULL) die("[ERROR] could not allocate memory for frame of gif block");
+  if (next_framep == NULL) die("[ERROR] could not allocate memory for frame of gif frames");
 
   next_framep->ctrl = NULL;
   next_framep->img = NULL;
