@@ -1,6 +1,6 @@
 # LGTM GIF ANIMATION
 
-Add LGTM to gif animation file
+Add LGTM frame to gif animation file
 
 ## Usage
 
