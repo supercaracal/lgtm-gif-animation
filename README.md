@@ -2,9 +2,11 @@
 
 Append LGTM frame to gif animation.
 
-## Build
+## Installation
 
 ```
+$ git clone https://github.com/supercaracal/lgtm-gif-animation.git
+$ cd lgtm-gif-animation
 $ make
 ```
 
