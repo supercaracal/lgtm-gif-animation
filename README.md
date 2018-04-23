@@ -2,7 +2,7 @@
 
 Append LGTM frame to gif animation.
 
-![lgtm](blob/master/lgtm.gif "LGTM")
+![lgtm](lgtm.gif "LGTM")
 
 <!-- base64:blob/master/lgtm.gif
 R0lGODlhgABAAPcAAAAAAAAAMwAAZgAAmQAAzAAA/wArAAArMwArZgArmQArzAAr/wBVAABVMwBV
