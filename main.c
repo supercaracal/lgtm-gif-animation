@@ -58,7 +58,6 @@ struct gif_block_ext_app {
   unsigned char block_size;
   char application_identifier[9];
   char application_authentication_code[4];
-  unsigned int application_data[2];
   char read_flag;
 };
 
@@ -358,14 +357,11 @@ read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp)
   }
   appp->application_authentication_code[3] = '\0';
 
-  block_size = bytesp->buf[bytesp->idx++];
-  if (block_size != 3) die("[ERROR] not supported block size of application extension");
+  while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
+    bytesp->idx += block_size;
+  }
 
-  appp->application_data[0] = bytesp->buf[bytesp->idx++];
-  appp->application_data[1] = extract_data(&bytesp->buf[bytesp->idx], 2);
-  bytesp->idx += 2;
-
-  if (bytesp->buf[bytesp->idx] != '\0') die("[ERROR] failed to read from gif application extension block data");
+  if (bytesp->buf[bytesp->idx - 1] != '\0') die("[ERROR] failed to read from gif application extension block data");
 
   appp->read_flag = 1;
 }
@@ -467,8 +463,6 @@ write_gif_ext_app(FILE *fp, const struct gif_block_ext_app *appp)
   fprintf(fp, "  Block Size: %u\n", appp->block_size);
   fprintf(fp, "  Application Identifier: %s\n", appp->application_identifier);
   fprintf(fp, "  Application Authentication Code: %s\n", appp->application_authentication_code);
-  fprintf(fp, "  Application Data1: %u\n", appp->application_data[0]);
-  fprintf(fp, "  Application Data2: %u\n", appp->application_data[1]);
 }
 
 static void
