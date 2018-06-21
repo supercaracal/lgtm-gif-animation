@@ -4,13 +4,13 @@ void
 append_lgtm_bytes(struct gif_bytes  *bytesp,
                   struct gif_header *hp)
 {
-  unsigned int total_size;
+  unsigned int  total_size;
   unsigned char *p;
-  unsigned int i;
+  unsigned int  i;
   unsigned char lgtm_colors[GIF_LGTM_DATA_COLORS_SIZE] = GIF_LGTM_DATA_COLORS;
   unsigned char lgtm_blocks[GIF_LGTM_DATA_BLOCKS_SIZE] = GIF_LGTM_DATA_BLOCKS;
-  unsigned int left;
-  unsigned int top;
+  unsigned int  left;
+  unsigned int  top;
 
   total_size = bytesp->size + GIF_LGTM_DATA_SIZE;
   p = (unsigned char *) realloc(bytesp->buf, total_size);

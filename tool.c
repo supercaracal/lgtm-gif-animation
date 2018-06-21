@@ -11,10 +11,12 @@ void
 die(const char *fmt, ...)
 {
   va_list list;
+
   va_start(list, fmt);
   vfprintf(stderr, fmt, list);
   fprintf(stderr, "\n");
   va_end(list);
+
   exit(1);
 }
 
@@ -26,6 +28,7 @@ calc_file_size(FILE *fp)
   fseek(fp, 0, SEEK_END);
   size = ftell(fp);
   rewind(fp);
+
   return size;
 }
 
@@ -49,7 +52,7 @@ print_color_table(FILE         *fp,
                   unsigned int *table,
                   char         *label)
 {
-  uint32_t color;
+  uint32_t     color;
   unsigned int r;
   unsigned int g;
   unsigned int b;

@@ -4,7 +4,7 @@ void
 read_gif_header(struct gif_bytes  *bytesp,
                 struct gif_header *hp)
 {
-  int i;
+  int           i;
   unsigned char bits;
 
   for (i = 0; i < 3; ++i) {

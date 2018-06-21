@@ -12,10 +12,10 @@
 int
 main(int argc, char *argv[])
 {
-  FILE *fp;
-  struct gif_bytes bytes;
-  struct gif_header h;
-  struct gif_block_frame first_frame;
+  FILE                     *fp;
+  struct gif_bytes         bytes;
+  struct gif_header        h;
+  struct gif_block_frame   first_frame;
   struct gif_block_ext_app app;
 
   if (argc == 1) {

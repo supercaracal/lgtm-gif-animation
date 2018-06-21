@@ -5,8 +5,8 @@ read_gif_block_img(struct gif_bytes       *bytesp,
                    struct gif_block_frame *framep)
 {
   unsigned char bits;
-  int i;
-  int block_size;
+  int           i;
+  int           block_size;
 
   if (framep->img != NULL) framep = add_frame(framep);
   framep->img = malloc(sizeof(struct gif_block_image));
