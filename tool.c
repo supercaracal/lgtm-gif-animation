@@ -1,4 +1,3 @@
-#include <stdarg.h>
 #include "tool.h"
 
 void
