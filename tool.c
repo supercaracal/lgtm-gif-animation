@@ -1,12 +1,13 @@
 #include "tool.h"
 
 #define ANSI_ESC 0x1b
-#define ANSI_ESC_SEQ_BG_FMT "%c[48;5;%dm %c[0m"
-#define ANSI_COLOR_DEGREE(rgb) ((rgb * 10 - 1) / 425)
-#define ANSI_COLOR_NUMBER(r, g, b) (16 + 36 * r + 6 * g + b)
+#define ANSI_ESC_SEQ_BG_FMT "%c[48;2;%d;%d;%dm"
+#define ANSI_ESC_SEQ_FG_FMT "%c[38;2;%d;%d;%dm"
+#define ANSI_ESC_SEQ_RESET_FMT "%c[0m"
+#define RGB_HEX_FMT "#%02X%02X%02X"
 
-static int
-convert_rgb_into_ansi_color(int r, int g, int b);
+static void
+print_color(FILE *fp, int r, int g, int b);
 
 void
 die_err(const char *msg)
@@ -66,27 +67,25 @@ print_color_table(FILE         *fp,
   unsigned int b;
   unsigned int i;
 
-  fprintf(fp, "  %s: ", label);
+  fprintf(fp, "  %s:\n", label);
   for (i = 0; i < size; ++i) {
-    // if (i > 0) fprintf(fp, ",");
     color = table[i];
     r = (color & 0x00ff0000) >> 16;
     g = (color & 0x0000ff00) >> 8;
     b = (color & 0x000000ff);
-    // fprintf(fp, "#%02X%02X%02X", r, g, b);
-    fprintf(fp,
-            ANSI_ESC_SEQ_BG_FMT,
-            ANSI_ESC,
-            convert_rgb_into_ansi_color(r, g, b),
-            ANSI_ESC);
+    print_color(fp, r, g, b);
   }
   fprintf(fp, "\n");
 }
 
-static int
-convert_rgb_into_ansi_color(int r, int g, int b)
+static void
+print_color(FILE *fp, int r, int g, int b)
 {
-  return ANSI_COLOR_NUMBER(ANSI_COLOR_DEGREE(r),
-                           ANSI_COLOR_DEGREE(g),
-                           ANSI_COLOR_DEGREE(b));
+  int fg = ((r + g + b) / 3) < 81 ? 255 : 0;
+
+  fprintf(fp,
+          ANSI_ESC_SEQ_BG_FMT ANSI_ESC_SEQ_FG_FMT RGB_HEX_FMT ANSI_ESC_SEQ_RESET_FMT,
+          ANSI_ESC, r, g, b,
+          ANSI_ESC, fg, fg, fg, r, g, b,
+          ANSI_ESC);
 }
