@@ -8,7 +8,9 @@ read_gif_block_ext_graph_ctrl(struct gif_bytes       *bytesp,
 
   if (framep->ctrl != NULL) framep = add_frame(framep);
   framep->ctrl = malloc(sizeof(struct gif_block_ext_gp_ctrl));
-  if (framep->ctrl == NULL) die("[ERROR] could not allocate memory for gif graphic control extension");
+  if (framep->ctrl == NULL) {
+    die("[ERROR] could not allocate memory for gif graphic control extension");
+  }
 
   framep->ctrl->block_size = bytesp->buf[bytesp->idx++];
 
@@ -23,7 +25,9 @@ read_gif_block_ext_graph_ctrl(struct gif_bytes       *bytesp,
 
   framep->ctrl->transparent_color_index = bytesp->buf[bytesp->idx++];
 
-  if (bytesp->buf[bytesp->idx] != '\0') die("[ERROR] failed to read from gif graphic control extension block data");
+  if (bytesp->buf[bytesp->idx] != '\0') {
+    die("[ERROR] failed to read from gif graphic control extension block data");
+  }
 
   return framep;
 }

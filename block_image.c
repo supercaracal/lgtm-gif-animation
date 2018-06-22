@@ -10,7 +10,9 @@ read_gif_block_img(struct gif_bytes       *bytesp,
 
   if (framep->img != NULL) framep = add_frame(framep);
   framep->img = malloc(sizeof(struct gif_block_image));
-  if (framep->img == NULL) die("[ERROR] could not allocate memory for gif image block");
+  if (framep->img == NULL) {
+    die("[ERROR] could not allocate memory for gif image block");
+  }
 
   framep->img->image_left_position = extract_data(&bytesp->buf[bytesp->idx], 2);
   bytesp->idx += 2;
@@ -30,7 +32,9 @@ read_gif_block_img(struct gif_bytes       *bytesp,
 
   if (framep->img->local_color_table_flag) {
     framep->img->local_color_table = malloc(framep->img->size_of_local_color_table);
-    if (framep->img->local_color_table == NULL) die("[ERROR] could not allocate memory for local color table of gif image block");
+    if (framep->img->local_color_table == NULL) {
+      die("[ERROR] could not allocate memory for local color table of gif image block");
+    }
     for (i = 0; i < framep->img->size_of_local_color_table; ++i) {
       framep->img->local_color_table[i] = extract_data(&bytesp->buf[bytesp->idx], 3);
       bytesp->idx += 3;

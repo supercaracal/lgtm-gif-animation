@@ -61,7 +61,10 @@ write_gif_blocks(FILE                         *fp,
     fprintf(fp, "  LZW Minimum Code Side: %u\n", framep->img->lzw_minimum_code_side);
 
     if (framep->img->local_color_table_flag) {
-      print_color_table(fp, framep->img->size_of_local_color_table, framep->img->local_color_table, "Local Color Table");
+      print_color_table(fp,
+                        framep->img->size_of_local_color_table,
+                        framep->img->local_color_table,
+                        "Local Color Table");
     }
   }
 }

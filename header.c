@@ -19,15 +19,21 @@ read_gif_header(struct gif_bytes  *bytesp,
   }
   hp->version[3] = '\0';
 
-  if (!strcmp(hp->signature, "89a")) die("[ERROR] not supported gif version: %s", hp->signature);
+  if (!strcmp(hp->signature, "89a")) {
+    die("[ERROR] not supported gif version: %s", hp->signature);
+  }
 
   hp->logical_screen_width = extract_data(&bytesp->buf[bytesp->idx], 2);
   bytesp->idx += 2;
-  if (hp->logical_screen_width < GIF_LGTM_IMG_WIDTH) die("[ERROR] not supported size of width (>= %d)", GIF_LGTM_IMG_WIDTH);
+  if (hp->logical_screen_width < GIF_LGTM_IMG_WIDTH) {
+    die("[ERROR] not supported size of width (>= %d)", GIF_LGTM_IMG_WIDTH);
+  }
 
   hp->logical_screen_height = extract_data(&bytesp->buf[bytesp->idx], 2);
   bytesp->idx += 2;
-  if (hp->logical_screen_height < GIF_LGTM_IMG_HEIGHT) die("[ERROR] not supported size of height (>= %d)", GIF_LGTM_IMG_HEIGHT);
+  if (hp->logical_screen_height < GIF_LGTM_IMG_HEIGHT) {
+    die("[ERROR] not supported size of height (>= %d)", GIF_LGTM_IMG_HEIGHT);
+  }
 
   bits = bytesp->buf[bytesp->idx++];
 
@@ -42,7 +48,9 @@ read_gif_header(struct gif_bytes  *bytesp,
 
   if (hp->global_color_table_flag) {
     hp->global_color_table = malloc(hp->size_of_global_color_table);
-    if (hp->global_color_table == NULL) die("[ERROR] could not allocate memory for global color table of gif header");
+    if (hp->global_color_table == NULL) {
+      die("[ERROR] could not allocate memory for global color table of gif header");
+    }
     for (i = 0; i < hp->size_of_global_color_table; ++i) {
       hp->global_color_table[i] = extract_data(&bytesp->buf[bytesp->idx], 3);
       bytesp->idx += 3;
@@ -67,7 +75,10 @@ write_gif_header(FILE                    *fp,
   fprintf(fp, "  Pixel Aspect Ratio: %u\n", hp->pixel_aspect_ratio);
 
   if (hp->global_color_table_flag) {
-    print_color_table(fp, hp->size_of_global_color_table, hp->global_color_table, "Global Color Table");
+    print_color_table(fp,
+                      hp->size_of_global_color_table,
+                      hp->global_color_table,
+                      "Global Color Table");
   }
 }
 

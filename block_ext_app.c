@@ -23,7 +23,9 @@ read_gif_block_ext_app(struct gif_bytes         *bytesp,
     bytesp->idx += block_size;
   }
 
-  if (bytesp->buf[bytesp->idx - 1] != '\0') die("[ERROR] failed to read from gif application extension block data");
+  if (bytesp->buf[bytesp->idx - 1] != '\0') {
+    die("[ERROR] failed to read from gif application extension block data");
+  }
 
   appp->read_flag = 1;
 }
