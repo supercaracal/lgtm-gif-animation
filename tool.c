@@ -1,5 +1,10 @@
 #include "tool.h"
 
+static int
+convert_rgb_into_ansi_color(int r,
+                          int g,
+                          int b);
+
 void
 die_err(const char *msg)
 {
@@ -60,12 +65,24 @@ print_color_table(FILE         *fp,
 
   fprintf(fp, "  %s: ", label);
   for (i = 0; i < size; ++i) {
-    if (i > 0) fprintf(fp, ",");
+    // if (i > 0) fprintf(fp, ",");
     color = table[i];
     r = (color & 0x00ff0000) >> 16;
     g = (color & 0x0000ff00) >> 8;
     b = (color & 0x000000ff);
-    fprintf(fp, "#%02X%02X%02X", r, g, b);
+    // fprintf(fp, "#%02X%02X%02X", r, g, b);
+    fprintf(fp, "%c[48;5;%dm %c[0m", 0x1b, convert_rgb_into_ansi_color(r, g, b), 0x1b);
   }
   fprintf(fp, "\n");
+}
+
+static int
+convert_rgb_into_ansi_color(int r,
+                          int g,
+                          int b)
+{
+  r = (r * 10 - 1) / 425;
+  g = (g * 10 - 1) / 425;
+  b = (b * 10 - 1) / 425;
+  return 16 + 36 * r + 6 * g + b;
 }
