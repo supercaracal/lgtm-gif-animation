@@ -41,7 +41,7 @@ read_gif_block_img(struct gif_bytes       *bytesp,
     }
   }
 
-  framep->img->lzw_minimum_code_side = bytesp->buf[bytesp->idx++];
+  framep->img->lzw_minimum_code_size = bytesp->buf[bytesp->idx++];
 
   while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
     bytesp->idx += block_size;

@@ -58,7 +58,7 @@ write_gif_blocks(FILE                         *fp,
     fprintf(fp, "  Sort Flag: %u\n", framep->img->sort_flag);
     fprintf(fp, "  Reserved: %u\n", framep->img->reserved);
     fprintf(fp, "  Size of Local Color Table: %u\n", framep->img->size_of_local_color_table);
-    fprintf(fp, "  LZW Minimum Code Side: %u\n", framep->img->lzw_minimum_code_side);
+    fprintf(fp, "  LZW Minimum Code Size: %u\n", framep->img->lzw_minimum_code_size);
 
     if (framep->img->local_color_table_flag) {
       print_color_table(fp,

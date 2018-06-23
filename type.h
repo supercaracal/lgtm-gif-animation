@@ -49,7 +49,7 @@ struct gif_block_image {
   unsigned char reserved;
   unsigned int  size_of_local_color_table;
   unsigned int  *local_color_table;
-  unsigned char lzw_minimum_code_side;
+  unsigned char lzw_minimum_code_size;
 };
 
 struct gif_block_frame {
