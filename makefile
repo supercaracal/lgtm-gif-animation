@@ -1,5 +1,16 @@
-lgtm-gif-animation: $(wildcard *.h *.c)
-	gcc -o $@ -Wall $^
+CC = gcc
 
-debug: $(wildcard *.h *.c)
-	gcc -o $@ -Wall -g $^
+.PHONY: all debug clean
+
+all: lgtm-gif-animation
+
+debug: lgtm-gif-animation-debug
+
+clean:
+	rm -f lgtm-gif-animation lgtm-gif-animation-debug
+
+lgtm-gif-animation: *.h *.c
+	$(CC) -o $@ -Wall $^
+
+lgtm-gif-animation-debug: *.h *.c
+	$(CC) -o $@ -Wall -g $^
