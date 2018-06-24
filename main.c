@@ -41,9 +41,11 @@ main(int argc, char *argv[])
 
   append_lgtm_bytes(&bytes, &h);
 
+#ifdef DEBUG
   write_gif_header(stderr, &h);
   write_gif_ext_app(stderr, &app);
   write_gif_blocks(stderr, &first_frame);
+#endif
   write_gif_data(stdout, &bytes);
 
   free(bytes.buf);

@@ -13,4 +13,4 @@ lgtm-gif-animation: *.h *.c
 	$(CC) -o $@ -Wall $^
 
 lgtm-gif-animation-debug: *.h *.c
-	$(CC) -o $@ -Wall -g $^
+	$(CC) -o $@ -Wall -g -DDEBUG $^
