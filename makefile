@@ -10,7 +10,7 @@ clean:
 	rm -f lgtm-gif-animation lgtm-gif-animation-debug
 
 define build-bin
-  $(LINK.c) $(OUTPUT_OPTION) $^
+  $(strip $(LINK.c)) $(OUTPUT_OPTION) $^
 endef
 
 lgtm-gif-animation: $(src_headers)
