@@ -1,6 +1,6 @@
 CC := gcc
 CFLAGS += -Wall
-src_headers := *.c *.h
+all_sources := *.c *.h
 
 .PHONY: all debug clean
 
@@ -13,10 +13,10 @@ define build-bin
   $(strip $(LINK.c)) $(OUTPUT_OPTION) $^
 endef
 
-lgtm-gif-animation: $(src_headers)
+lgtm-gif-animation: $(all_sources)
 	$(build-bin)
 
 lgtm-gif-animation-debug: CFLAGS += -g
 lgtm-gif-animation-debug: CPPFLAGS += -DDEBUG
-lgtm-gif-animation-debug: $(src_headers)
+lgtm-gif-animation-debug: $(all_sources)
 	$(build-bin)
