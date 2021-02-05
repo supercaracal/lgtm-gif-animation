@@ -8,7 +8,6 @@ SRCS := block block_ext block_ext_app block_ext_comment block_ext_gp_ctrl block_
 OBJS := $(addsuffix .o,$(SRCS))
 
 define link
-	@mkdir -p bin
 	$(strip $(LINK.o)) $^ $(LOADLIBES) $(LDLIBS) -o $@
 endef
 
