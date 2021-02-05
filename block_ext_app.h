@@ -8,4 +8,4 @@
 void read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp);
 void write_gif_ext_app(FILE *fp, const struct gif_block_ext_app *appp);
 
-#endif // BLOCK_EXT_APP_H_
+#endif  // BLOCK_EXT_APP_H_

@@ -58,4 +58,4 @@ struct gif_block_frame {
   struct gif_block_frame *next;
 };
 
-#endif // TYPE_H_
+#endif  // TYPE_H_

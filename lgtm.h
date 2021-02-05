@@ -7,4 +7,4 @@
 
 void append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp);
 
-#endif // LGTM_H_
+#endif  // LGTM_H_

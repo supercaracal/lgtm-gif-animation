@@ -11,4 +11,4 @@
 
 struct gif_block_frame *read_gif_block_ext(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct gif_block_ext_app *appp);
 
-#endif // BLOCK_EXT_H_
+#endif  // BLOCK_EXT_H_

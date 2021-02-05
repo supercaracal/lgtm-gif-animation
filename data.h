@@ -8,4 +8,4 @@
 void read_gif_data(FILE *fp, struct gif_bytes *bytesp);
 void write_gif_data(FILE *fp, const struct gif_bytes *bytesp);
 
-#endif // DATA_H_
+#endif  // DATA_H_
