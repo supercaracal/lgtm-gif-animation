@@ -6,19 +6,14 @@
 #define ANSI_ESC_SEQ_RESET_FMT "%c[0m"
 #define RGB_HEX_FMT "#%02X%02X%02X"
 
-static void
-print_color(FILE *fp, int r, int g, int b);
+static void print_color(FILE *fp, int r, int g, int b);
 
-void
-die_err(const char *msg)
-{
+void die_err(const char *msg) {
   perror(msg);
   exit(1);
 }
 
-void
-die(const char *fmt, ...)
-{
+void die(const char *fmt, ...) {
   va_list list;
 
   va_start(list, fmt);
@@ -29,9 +24,7 @@ die(const char *fmt, ...)
   exit(1);
 }
 
-int
-calc_file_size(FILE *fp)
-{
+int calc_file_size(FILE *fp) {
   int size;
 
   fseek(fp, 0, SEEK_END);
@@ -41,10 +34,7 @@ calc_file_size(FILE *fp)
   return size;
 }
 
-uint32_t
-extract_data(const unsigned char *bytes,
-             int                 n)
-{
+uint32_t extract_data(const unsigned char *bytes, int n) {
   uint32_t ret;
   int i;
 
@@ -55,13 +45,8 @@ extract_data(const unsigned char *bytes,
   return ret;
 }
 
-void
-print_color_table(FILE         *fp,
-                  unsigned int size,
-                  unsigned int *table,
-                  char         *label)
-{
-  uint32_t     color;
+void print_color_table(FILE *fp, unsigned int size, unsigned int *table, char *label) {
+  uint32_t color;
   unsigned int r;
   unsigned int g;
   unsigned int b;
@@ -78,9 +63,7 @@ print_color_table(FILE         *fp,
   fprintf(fp, "\n");
 }
 
-static void
-print_color(FILE *fp, int r, int g, int b)
-{
+static void print_color(FILE *fp, int r, int g, int b) {
   int fg = ((r + g + b) / 3) < 81 ? 255 : 0;
 
   fprintf(fp,

@@ -1,0 +1,45 @@
+---
+# @see https://help.github.com/ja/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions
+name: Test
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+jobs:
+  test:
+    name: Test
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
+        cc: ["gcc", "clang"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: CC=${{ matrix.cc }} make build
+
+      - name: Clean
+        run: make clean
+
+      - name: Debug
+        run: CC=${{ matrix.cc }} make debug
+
+      - name: Clean
+        run: make clean
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install cpplint
+        run: pip install cpplint
+
+      - name: Lint
+        run: make lint

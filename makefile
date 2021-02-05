@@ -1,22 +1,35 @@
-CC := gcc
-CFLAGS += -Wall
-all_sources := *.c *.h
+SHELL := /bin/bash
+CC    ?= gcc
 
-.PHONY: all debug clean
+CFLAGS += -std=c11 -D_POSIX_C_SOURCE=200809
+CFLAGS += -Wall -Wextra -Wpedantic -Wundef
 
-all: lgtm-gif-animation
-debug: lgtm-gif-animation-debug
-clean:
-	rm -f lgtm-gif-animation lgtm-gif-animation-debug
+SRCS := block block_ext block_ext_app block_ext_comment block_ext_gp_ctrl block_ext_plain_text block_frame block_image data header lgtm tool
+OBJS := $(addsuffix .o,$(SRCS))
 
-define build-bin
-  $(strip $(LINK.c)) $(OUTPUT_OPTION) $^
+define link
+	@mkdir -p bin
+	$(strip $(LINK.o)) $^ $(LOADLIBES) $(LDLIBS) -o $@
 endef
 
-lgtm-gif-animation: $(all_sources)
-	$(build-bin)
+build: lgtm-gif-animation
+
+lgtm-gif-animation: CFLAGS += -O2
+lgtm-gif-animation: main.o $(OBJS)
+	$(call link)
+
+debug: lgtm-gif-animation-debug
 
 lgtm-gif-animation-debug: CFLAGS += -g
 lgtm-gif-animation-debug: CPPFLAGS += -DDEBUG
-lgtm-gif-animation-debug: $(all_sources)
-	$(build-bin)
+lgtm-gif-animation-debug: main.o $(OBJS)
+	$(call link)
+
+lint:
+	@type cpplint
+	@cpplint *.h *.c
+
+clean:
+	@rm -f lgtm-gif-animation lgtm-gif-animation-debug *.o
+
+.PHONY: build debug lint clean
