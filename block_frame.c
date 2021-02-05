@@ -17,8 +17,7 @@ struct gif_block_frame *add_frame(struct gif_block_frame *prev_framep) {
 }
 
 void dealloc_gif_frames(struct gif_block_frame *framep) {
-  struct gif_block_frame *fp;
-  struct gif_block_frame *nfp;
+  struct gif_block_frame *fp, *nfp;
 
   fp = framep->next;
   if (fp == NULL) return;

@@ -47,10 +47,7 @@ uint32_t extract_data(const unsigned char *bytes, int n) {
 
 void print_color_table(FILE *fp, unsigned int size, unsigned int *table, char *label) {
   uint32_t color;
-  unsigned int r;
-  unsigned int g;
-  unsigned int b;
-  unsigned int i;
+  unsigned int r, g, b, i;
 
   fprintf(fp, "  %s:\n", label);
   for (i = 0; i < size; ++i) {

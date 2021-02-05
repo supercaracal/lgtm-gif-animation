@@ -36,6 +36,8 @@ struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_
       framep->img->local_color_table[i] = extract_data(&bytesp->buf[bytesp->idx], 3);
       bytesp->idx += 3;
     }
+  } else {
+    framep->img->local_color_table = NULL;
   }
 
   framep->img->lzw_minimum_code_size = bytesp->buf[bytesp->idx++];

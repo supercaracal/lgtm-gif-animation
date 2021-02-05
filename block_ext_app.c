@@ -1,8 +1,7 @@
 #include "block_ext_app.h"
 
 void read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp) {
-  int i;
-  int block_size;
+  int i, block_size;
 
   appp->block_size = bytesp->buf[bytesp->idx++];
 
