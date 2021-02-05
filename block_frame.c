@@ -1,11 +1,9 @@
 #include "block_frame.h"
 
-struct gif_block_frame *
-add_frame(struct gif_block_frame *prev_framep)
-{
+struct gif_block_frame *add_frame(struct gif_block_frame *prev_framep) {
   struct gif_block_frame *next_framep;
 
-  next_framep = malloc(sizeof(struct gif_block_frame));
+  next_framep = (struct gif_block_frame *) malloc(sizeof(struct gif_block_frame));
   if (next_framep == NULL) {
     die("[ERROR] could not allocate memory for frame of gif frames");
   }
@@ -18,9 +16,7 @@ add_frame(struct gif_block_frame *prev_framep)
   return next_framep;
 }
 
-void
-dealloc_gif_frames(struct gif_block_frame *framep)
-{
+void dealloc_gif_frames(struct gif_block_frame *framep) {
   struct gif_block_frame *fp;
   struct gif_block_frame *nfp;
 

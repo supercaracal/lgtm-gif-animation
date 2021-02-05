@@ -9,13 +9,11 @@
 #include "./lgtm.h"
 #include "./block_ext_app.h"
 
-int
-main(int argc, char *argv[])
-{
-  FILE                     *fp;
-  struct gif_bytes         bytes;
-  struct gif_header        h;
-  struct gif_block_frame   first_frame;
+int main(int argc, char *argv[]) {
+  FILE *fp;
+  struct gif_bytes bytes;
+  struct gif_header h;
+  struct gif_block_frame first_frame;
   struct gif_block_ext_app app;
 
   if (argc == 1) {
@@ -27,7 +25,7 @@ main(int argc, char *argv[])
 
   bytes.idx = 0;
   bytes.size = calc_file_size(fp);
-  bytes.buf = malloc(bytes.size);
+  bytes.buf = (unsigned char *) malloc(bytes.size);
   if (bytes.buf == NULL) die("[ERROR] could not allocate memory for buffer of gif bytes");
 
   first_frame.ctrl = NULL;

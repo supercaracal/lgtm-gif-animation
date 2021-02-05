@@ -1,15 +1,12 @@
 #include "block_image.h"
 
-struct gif_block_frame *
-read_gif_block_img(struct gif_bytes       *bytesp,
-                   struct gif_block_frame *framep)
-{
+struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep) {
   unsigned char bits;
-  int           i;
-  int           block_size;
+  unsigned int i;
+  int block_size;
 
   if (framep->img != NULL) framep = add_frame(framep);
-  framep->img = malloc(sizeof(struct gif_block_image));
+  framep->img = (struct gif_block_image *) malloc(sizeof(struct gif_block_image));
   if (framep->img == NULL) {
     die("[ERROR] could not allocate memory for gif image block");
   }
@@ -31,7 +28,7 @@ read_gif_block_img(struct gif_bytes       *bytesp,
   framep->img->size_of_local_color_table = 2 << (bits & ((1 << 2) | (1 << 1) | 1));
 
   if (framep->img->local_color_table_flag) {
-    framep->img->local_color_table = malloc(framep->img->size_of_local_color_table);
+    framep->img->local_color_table = (unsigned int *) malloc(framep->img->size_of_local_color_table);
     if (framep->img->local_color_table == NULL) {
       die("[ERROR] could not allocate memory for local color table of gif image block");
     }

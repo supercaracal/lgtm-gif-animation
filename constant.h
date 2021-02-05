@@ -93,4 +93,4 @@
 #define GIF_LGTM_IMG_HEIGHT 64
 #define GIF_LGTM_IMG_DISPLAY_SEC 2
 
-#endif // CONSTANT_H_
+#endif  // CONSTANT_H_

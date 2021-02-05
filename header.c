@@ -1,10 +1,7 @@
 #include "header.h"
 
-void
-read_gif_header(struct gif_bytes  *bytesp,
-                struct gif_header *hp)
-{
-  int           i;
+void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
+  unsigned int i;
   unsigned char bits;
 
   for (i = 0; i < 3; ++i) {
@@ -47,7 +44,7 @@ read_gif_header(struct gif_bytes  *bytesp,
   hp->pixel_aspect_ratio = bytesp->buf[bytesp->idx++];
 
   if (hp->global_color_table_flag) {
-    hp->global_color_table = malloc(hp->size_of_global_color_table);
+    hp->global_color_table = (unsigned int *) malloc(hp->size_of_global_color_table);
     if (hp->global_color_table == NULL) {
       die("[ERROR] could not allocate memory for global color table of gif header");
     }
@@ -58,10 +55,7 @@ read_gif_header(struct gif_bytes  *bytesp,
   }
 }
 
-void
-write_gif_header(FILE                    *fp,
-                 const struct gif_header *hp)
-{
+void write_gif_header(FILE *fp, const struct gif_header *hp) {
   fprintf(fp, "Headers\n");
   fprintf(fp, "  Signature: %s\n", hp->signature);
   fprintf(fp, "  Version: %s\n", hp->version);
@@ -82,8 +76,6 @@ write_gif_header(FILE                    *fp,
   }
 }
 
-void
-dealloc_gif_header(struct gif_header *hp)
-{
+void dealloc_gif_header(struct gif_header *hp) {
   if (hp->global_color_table_flag) free(hp->global_color_table);
 }
