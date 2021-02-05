@@ -1,26 +1,23 @@
 #include "lgtm.h"
 
 void append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp) {
-  unsigned int  total_size;
-  unsigned char *p;
-  unsigned int  i;
+  unsigned int total_size, i, left, top;
+  void *p;
   unsigned char lgtm_colors[GIF_LGTM_DATA_COLORS_SIZE] = GIF_LGTM_DATA_COLORS;
   unsigned char lgtm_blocks[GIF_LGTM_DATA_BLOCKS_SIZE] = GIF_LGTM_DATA_BLOCKS;
-  unsigned int  left;
-  unsigned int  top;
 
   total_size = bytesp->size + GIF_LGTM_DATA_SIZE;
-  p = (unsigned char *) realloc(bytesp->buf, total_size);
+  p = realloc(bytesp->buf, total_size);
   if (p == NULL) {
     free(bytesp->buf);
     die("[ERROR] could not reallocate memory for lgtm bytes");
   }
-  bytesp->buf = p;
+  bytesp->buf = (unsigned char *) p;
   bytesp->size = total_size;
   if (bytesp->buf[bytesp->idx - 1] != GIF_TRAILER) {
     die("[FATAL] something wrong with gif data or this program");
   }
-  --bytesp->idx;
+  bytesp->idx--;
 
   bytesp->buf[bytesp->idx++] = GIF_BLOCK_TYPE_EXT;
   bytesp->buf[bytesp->idx++] = GIF_EXT_LABEL_GRAPH_CTRL;

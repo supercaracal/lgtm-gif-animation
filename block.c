@@ -54,10 +54,7 @@ void write_gif_blocks(FILE *fp, const struct gif_block_frame *framep) {
     fprintf(fp, "  LZW Minimum Code Size: %u\n", framep->img->lzw_minimum_code_size);
 
     if (framep->img->local_color_table_flag) {
-      print_color_table(fp,
-                        framep->img->size_of_local_color_table,
-                        framep->img->local_color_table,
-                        "Local Color Table");
+      print_color_table(fp, framep->img->size_of_local_color_table, framep->img->local_color_table, "Local Color Table");
     }
   }
 }

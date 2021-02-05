@@ -4,7 +4,7 @@ struct gif_block_frame *read_gif_block_ext_graph_ctrl(struct gif_bytes *bytesp, 
   unsigned char bits;
 
   if (framep->ctrl != NULL) framep = add_frame(framep);
-  framep->ctrl = malloc(sizeof(struct gif_block_ext_gp_ctrl));
+  framep->ctrl = (struct gif_block_ext_gp_ctrl *) malloc(sizeof(struct gif_block_ext_gp_ctrl));
   if (framep->ctrl == NULL) {
     die("[ERROR] could not allocate memory for gif graphic control extension");
   }

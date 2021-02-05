@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
   bytes.idx = 0;
   bytes.size = calc_file_size(fp);
-  bytes.buf = malloc(bytes.size);
+  bytes.buf = (unsigned char *) malloc(bytes.size);
   if (bytes.buf == NULL) die("[ERROR] could not allocate memory for buffer of gif bytes");
 
   first_frame.ctrl = NULL;

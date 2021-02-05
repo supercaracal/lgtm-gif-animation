@@ -44,7 +44,7 @@ void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
   hp->pixel_aspect_ratio = bytesp->buf[bytesp->idx++];
 
   if (hp->global_color_table_flag) {
-    hp->global_color_table = malloc(hp->size_of_global_color_table);
+    hp->global_color_table = (unsigned int *) malloc(hp->size_of_global_color_table);
     if (hp->global_color_table == NULL) {
       die("[ERROR] could not allocate memory for global color table of gif header");
     }
