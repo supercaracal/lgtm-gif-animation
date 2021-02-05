@@ -1,4 +1,7 @@
-# LGTM GIF ANIMATION
+![](https://github.com/supercaracal/lgtm-gif-animation/workflows/Test/badge.svg?branch=master)
+
+LGTM GIF ANIMATION
+======================
 
 Append LGTM frame to gif animation.
 
