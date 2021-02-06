@@ -9,6 +9,6 @@
 #include "./block_ext_comment.h"
 #include "./block_ext_plain_text.h"
 
-struct gif_block_frame *read_gif_block_ext(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct gif_block_ext_app *appp);
+struct gif_block_frame *read_gif_block_ext(struct gif_bytes *, struct gif_block_frame *, struct gif_block_ext_app *);
 
 #endif  // BLOCK_EXT_H_

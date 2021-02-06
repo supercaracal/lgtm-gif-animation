@@ -5,6 +5,6 @@
 #include "./type.h"
 #include "./tool.h"
 
-void append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp);
+void append_lgtm_bytes(struct gif_bytes *, struct gif_header *);
 
 #endif  // LGTM_H_
