@@ -1,7 +1,7 @@
 #include "header.h"
 
 void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
-  unsigned int i;
+  int i;
   unsigned char bits;
 
   for (i = 0; i < 3; ++i) {
@@ -37,7 +37,7 @@ void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
   hp->global_color_table_flag = (bits & (1 << 7)) >> 7;
   hp->color_resolution = ((bits & ((1 << 6) | (1 << 5) | (1 << 4))) >> 4) + 1;
   hp->sort_flag = (bits & (1 << 3)) >> 3;
-  hp->size_of_global_color_table = 1 << ((bits & ((1 << 2) | (1 << 1) | 1)) + 1);
+  hp->size_of_global_color_table = (int) (1 << ((bits & ((1 << 2) | (1 << 1) | 1)) + 1));
 
   hp->background_color_index = bytesp->buf[bytesp->idx++];
 

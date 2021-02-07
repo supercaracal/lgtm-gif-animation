@@ -15,7 +15,7 @@ struct gif_header {
   unsigned char global_color_table_flag;
   unsigned char color_resolution;
   unsigned char sort_flag;
-  unsigned int size_of_global_color_table;
+  int size_of_global_color_table;
   unsigned char background_color_index;
   unsigned char pixel_aspect_ratio;
   unsigned int *global_color_table;
@@ -29,7 +29,7 @@ struct gif_block_ext_app {
 };
 
 struct gif_block_ext_gp_ctrl {
-  unsigned int block_size;
+  unsigned char block_size;
   unsigned char reserved;
   unsigned char disposal_method;
   unsigned char user_input_flag;
@@ -47,7 +47,7 @@ struct gif_block_image {
   unsigned char interlace_flag;
   unsigned char sort_flag;
   unsigned char reserved;
-  unsigned int size_of_local_color_table;
+  int size_of_local_color_table;
   unsigned int *local_color_table;
   unsigned char lzw_minimum_code_size;
 };

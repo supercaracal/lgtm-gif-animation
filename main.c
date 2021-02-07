@@ -9,7 +9,7 @@
 #include "./lgtm.h"
 #include "./block_ext_app.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
   FILE *fp;
   struct gif_bytes bytes;
   struct gif_header h;
@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
   write_gif_ext_app(stderr, &app);
   write_gif_blocks(stderr, &first_frame);
 #endif
+
   write_gif_data(stdout, &bytes);
 
   free(bytes.buf);
