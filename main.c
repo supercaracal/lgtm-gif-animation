@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 
   bytes.idx = 0;
   bytes.size = calc_file_size(fp);
-  bytes.buf = (unsigned char *) malloc(bytes.size);
+  bytes.buf = (unsigned char *) malloc(sizeof(unsigned char) * bytes.size);
   if (bytes.buf == NULL) die("[ERROR] could not allocate memory to read file");
   n = fread(bytes.buf, sizeof(unsigned char), bytes.size, fp);
   if (n != bytes.size) die("[ERROR] failed to read file");
