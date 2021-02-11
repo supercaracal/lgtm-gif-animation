@@ -1,4 +1,5 @@
 #include "block_ext_app.h"
+#include "tool.h"
 
 void read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp) {
   int i, block_size;

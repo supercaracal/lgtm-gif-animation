@@ -2,9 +2,7 @@
 #define TOOL_H_
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <inttypes.h>
-#include <stdarg.h>
 
 void die_err(const char *);
 void die(const char *, ...);

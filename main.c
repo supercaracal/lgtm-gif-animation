@@ -7,6 +7,7 @@
 #include "./block.h"
 #include "./lgtm.h"
 #include "./block_ext_app.h"
+#include "./block_frame.h"
 
 int main(int argc, char **argv) {
   FILE *fp;

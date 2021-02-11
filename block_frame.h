@@ -2,7 +2,6 @@
 #define BLOCK_FRAME_H_
 
 #include "./type.h"
-#include "./tool.h"
 
 struct gif_block_frame *add_frame(struct gif_block_frame *);
 void free_gif_frames(struct gif_block_frame *);

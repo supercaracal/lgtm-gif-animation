@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include <stdarg.h>
 #include "tool.h"
 
 #define ANSI_ESC 0x1b

@@ -1,4 +1,8 @@
+#include <stdlib.h>
+#include <string.h>
 #include "header.h"
+#include "constant.h"
+#include "tool.h"
 
 void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
   int i;
