@@ -1,4 +1,7 @@
+#include <stdlib.h>
 #include "lgtm.h"
+#include "constant.h"
+#include "tool.h"
 
 void append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp) {
   unsigned int total_size, i, left, top;

@@ -1,7 +1,11 @@
+#include <stdlib.h>
+#include <string.h>
 #include "header.h"
+#include "constant.h"
+#include "tool.h"
 
 void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
-  unsigned int i;
+  int i;
   unsigned char bits;
 
   for (i = 0; i < 3; ++i) {
@@ -76,6 +80,6 @@ void write_gif_header(FILE *fp, const struct gif_header *hp) {
   }
 }
 
-void dealloc_gif_header(struct gif_header *hp) {
+void free_gif_header(struct gif_header *hp) {
   if (hp->global_color_table_flag) free(hp->global_color_table);
 }

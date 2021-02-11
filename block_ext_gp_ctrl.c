@@ -1,4 +1,7 @@
+#include <stdlib.h>
 #include "block_ext_gp_ctrl.h"
+#include "tool.h"
+#include "block_frame.h"
 
 struct gif_block_frame *read_gif_block_ext_graph_ctrl(struct gif_bytes *bytesp, struct gif_block_frame *framep) {
   unsigned char bits;

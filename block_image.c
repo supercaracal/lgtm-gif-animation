@@ -1,9 +1,11 @@
+#include <stdlib.h>
 #include "block_image.h"
+#include "tool.h"
+#include "block_frame.h"
 
 struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep) {
   unsigned char bits;
-  unsigned int i;
-  int block_size;
+  int i, block_size;
 
   if (framep->img != NULL) framep = add_frame(framep);
   framep->img = (struct gif_block_image *) malloc(sizeof(struct gif_block_image));
@@ -36,6 +38,8 @@ struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_
       framep->img->local_color_table[i] = extract_data(&bytesp->buf[bytesp->idx], 3);
       bytesp->idx += 3;
     }
+  } else {
+    framep->img->local_color_table = NULL;
   }
 
   framep->img->lzw_minimum_code_size = bytesp->buf[bytesp->idx++];

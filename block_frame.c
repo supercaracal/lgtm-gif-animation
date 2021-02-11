@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include "block_frame.h"
+#include "tool.h"
 
 struct gif_block_frame *add_frame(struct gif_block_frame *prev_framep) {
   struct gif_block_frame *next_framep;
@@ -16,9 +18,8 @@ struct gif_block_frame *add_frame(struct gif_block_frame *prev_framep) {
   return next_framep;
 }
 
-void dealloc_gif_frames(struct gif_block_frame *framep) {
-  struct gif_block_frame *fp;
-  struct gif_block_frame *nfp;
+void free_gif_frames(struct gif_block_frame *framep) {
+  struct gif_block_frame *fp, *nfp;
 
   fp = framep->next;
   if (fp == NULL) return;
