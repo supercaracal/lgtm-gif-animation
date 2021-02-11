@@ -30,7 +30,7 @@ struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_
   framep->img->size_of_local_color_table = 2 << (bits & ((1 << 2) | (1 << 1) | 1));
 
   if (framep->img->local_color_table_flag) {
-    framep->img->local_color_table = (unsigned int *) malloc(framep->img->size_of_local_color_table);
+    framep->img->local_color_table = (unsigned int *) malloc(sizeof(unsigned int) * framep->img->size_of_local_color_table);
     if (framep->img->local_color_table == NULL) {
       die("[ERROR] could not allocate memory for local color table of gif image block");
     }
