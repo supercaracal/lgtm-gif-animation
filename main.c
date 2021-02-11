@@ -27,16 +27,16 @@ int main(int argc, char **argv) {
   bytes.size = calc_file_size(fp);
   bytes.buf = (unsigned char *) malloc(bytes.size);
   if (bytes.buf == NULL) die("[ERROR] could not allocate memory for buffer of gif bytes");
+  read_gif_data(fp, &bytes);
+  fclose(fp);
 
   h.global_color_table = NULL;
-
   first_frame.ctrl = NULL;
   first_frame.img = NULL;
   first_frame.next = NULL;
-
-  read_gif_data(fp, &bytes);
-  read_gif_header(&bytes, &h);
   app.read_flag = 0;
+
+  read_gif_header(&bytes, &h);
   read_gif_blocks(&bytes, &first_frame, &app);
 
   append_lgtm_bytes(&bytes, &h);
@@ -46,7 +46,6 @@ int main(int argc, char **argv) {
   write_gif_ext_app(stderr, &app);
   write_gif_blocks(stderr, &first_frame);
 #endif
-
   write_gif_data(stdout, &bytes);
 
   free(bytes.buf);
