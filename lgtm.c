@@ -10,7 +10,7 @@ void append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp) {
   unsigned char lgtm_blocks[GIF_LGTM_DATA_BLOCKS_SIZE] = GIF_LGTM_DATA_BLOCKS;
 
   total_size = bytesp->size + GIF_LGTM_DATA_SIZE;
-  p = realloc(bytesp->buf, total_size);
+  p = realloc(bytesp->buf, sizeof(unsigned char) * total_size);
   if (p == NULL) {
     free(bytesp->buf);
     die("[ERROR] could not reallocate memory for lgtm bytes");
