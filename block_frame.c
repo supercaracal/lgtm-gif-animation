@@ -16,7 +16,7 @@ struct gif_block_frame *add_frame(struct gif_block_frame *prev_framep) {
   return next_framep;
 }
 
-void dealloc_gif_frames(struct gif_block_frame *framep) {
+void free_gif_frames(struct gif_block_frame *framep) {
   struct gif_block_frame *fp, *nfp;
 
   fp = framep->next;

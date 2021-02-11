@@ -9,6 +9,6 @@
 
 void read_gif_header(struct gif_bytes *, struct gif_header *);
 void write_gif_header(FILE *, const struct gif_header *);
-void dealloc_gif_header(struct gif_header *);
+void free_gif_header(struct gif_header *);
 
 #endif  // HEADER_H_

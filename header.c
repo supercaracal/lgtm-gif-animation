@@ -76,6 +76,6 @@ void write_gif_header(FILE *fp, const struct gif_header *hp) {
   }
 }
 
-void dealloc_gif_header(struct gif_header *hp) {
+void free_gif_header(struct gif_header *hp) {
   if (hp->global_color_table_flag) free(hp->global_color_table);
 }
