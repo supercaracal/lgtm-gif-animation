@@ -3,7 +3,6 @@
 #include <string.h>
 #include "./type.h"
 #include "./tool.h"
-#include "./data.h"
 #include "./header.h"
 #include "./block.h"
 #include "./lgtm.h"
@@ -11,6 +10,7 @@
 
 int main(int argc, char **argv) {
   FILE *fp;
+  int n;
   struct gif_bytes bytes;
   struct gif_header h;
   struct gif_block_frame first_frame;
@@ -27,18 +27,19 @@ int main(int argc, char **argv) {
   bytes.size = calc_file_size(fp);
   bytes.buf = (unsigned char *) malloc(bytes.size);
   if (bytes.buf == NULL) die("[ERROR] could not allocate memory for buffer of gif bytes");
-  read_gif_data(fp, &bytes);
-  fclose(fp);
+  n = fread(bytes.buf, sizeof(unsigned char), bytes.size, fp);
+  if (n != bytes.size) die("[ERROR] failed to read from file");
+  n = fclose(fp);
+  if (n == EOF) die_err("[ERROR] failed to close file");
+  fp = NULL;
 
   h.global_color_table = NULL;
   first_frame.ctrl = NULL;
   first_frame.img = NULL;
   first_frame.next = NULL;
   app.read_flag = 0;
-
   read_gif_header(&bytes, &h);
   read_gif_blocks(&bytes, &first_frame, &app);
-
   append_lgtm_bytes(&bytes, &h);
 
 #ifdef DEBUG
@@ -46,7 +47,8 @@ int main(int argc, char **argv) {
   write_gif_ext_app(stderr, &app);
   write_gif_blocks(stderr, &first_frame);
 #endif
-  write_gif_data(stdout, &bytes);
+  n = fwrite(bytes.buf, sizeof(unsigned char), bytes.size, stdout);
+  if (n != bytes.size) die("[ERROR] failed to write of gif bytes");
 
   free(bytes.buf);
   dealloc_gif_header(&h);
