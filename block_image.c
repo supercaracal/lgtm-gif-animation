@@ -24,7 +24,7 @@ struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_
   framep->img->interlace_flag = (bits & (1 << 6)) >> 6;
   framep->img->sort_flag = (bits & (1 << 5)) >> 5;
   framep->img->reserved = ((bits & (1 << 4)) | (bits & (1 << 3))) >> 3;
-  framep->img->size_of_local_color_table = (int) (2 << (bits & ((1 << 2) | (1 << 1) | 1)));
+  framep->img->size_of_local_color_table = 2 << (bits & ((1 << 2) | (1 << 1) | 1));
 
   if (framep->img->local_color_table_flag) {
     framep->img->local_color_table = (unsigned int *) malloc(framep->img->size_of_local_color_table);
