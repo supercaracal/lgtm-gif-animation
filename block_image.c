@@ -3,6 +3,8 @@
 #include "tool.h"
 #include "block_frame.h"
 
+void concat_img_block(struct gif_bytes *, struct gif_block_image *, int);
+
 struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep) {
   unsigned char bits;
   int i, block_size;
@@ -44,9 +46,29 @@ struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_
 
   framep->img->lzw_minimum_code_size = bytesp->buf[bytesp->idx++];
 
+  framep->img->data_size = 0;
+  framep->img->data_idx = 0;
+  framep->img->data = NULL;
   while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
-    bytesp->idx += block_size;
+    concat_img_block(bytesp, framep->img, block_size);
   }
 
   return framep;
+}
+
+void concat_img_block(struct gif_bytes *b, struct gif_block_image *i, int size) {
+  void *p;
+
+  i->data_size += size;
+
+  if (i->data == NULL) {
+    p = malloc(sizeof(unsigned char) * i->data_size);
+  } else {
+    p = realloc(i->data, sizeof(unsigned char) * i->data_size);
+  }
+
+  if (p == NULL) die("[ERROR] could not allocate memory for lzw data");
+  i->data = (unsigned char *) p;
+
+  while (size--) i->data[i->data_idx++] = b->buf[b->idx++];
 }

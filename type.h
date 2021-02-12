@@ -50,6 +50,9 @@ struct gif_block_image {
   int size_of_local_color_table;
   unsigned int *local_color_table;
   unsigned char lzw_minimum_code_size;
+  int data_size;
+  int data_idx;
+  unsigned char *data;
 };
 
 struct gif_block_frame {
