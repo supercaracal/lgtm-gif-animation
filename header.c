@@ -12,14 +12,12 @@ void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
     hp->signature[i] = bytesp->buf[bytesp->idx++];
   }
   hp->signature[3] = '\0';
-
   if (strcmp(hp->signature, "GIF") != 0) die("[ERROR] not supported file");
 
   for (i = 0; i < 3; ++i) {
     hp->version[i] = bytesp->buf[bytesp->idx++];
   }
   hp->version[3] = '\0';
-
   if (strcmp(hp->version, "89a") != 0 && strcmp(hp->version, "87a") != 0) {
     die("[ERROR] not supported gif version: %s", hp->version);
   }
