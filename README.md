@@ -3,7 +3,7 @@
 LGTM GIF Animation
 ======================
 
-This tool appends LGTM frame to animated gif.
+This tool appends a LGTM frame to animated gif.
 
 ## Usage
 
