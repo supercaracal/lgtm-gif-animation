@@ -4,7 +4,7 @@
 #include "block_image.h"
 #include "block_ext.h"
 
-void read_gif_blocks(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct gif_block_ext_app *appp) {
+void read_gif_blocks(BinData *bytesp, GIFBlockFrame *framep, GIFBlockExtApp *appp) {
   unsigned char c;
   int trailer_exists;
 
@@ -34,7 +34,7 @@ void read_gif_blocks(struct gif_bytes *bytesp, struct gif_block_frame *framep, s
   }
 }
 
-void write_gif_blocks(FILE *fp, const struct gif_block_frame *framep) {
+void write_gif_blocks(FILE *fp, const GIFBlockFrame *framep) {
   int i;
 
   for (i = 1; framep != NULL; framep = framep->next, ++i) {
@@ -56,7 +56,7 @@ void write_gif_blocks(FILE *fp, const struct gif_block_frame *framep) {
     fprintf(fp, "  Reserved: %u\n", framep->img->reserved);
     fprintf(fp, "  Size of Local Color Table: %u\n", framep->img->size_of_local_color_table);
     fprintf(fp, "  LZW Minimum Code Size: %u\n", framep->img->lzw_minimum_code_size);
-    fprintf(fp, "  Data Size: %u\n", framep->img->data_size);
+    fprintf(fp, "  Compressed Data Size: %u\n", framep->img->lzw_data.size);
 
     if (framep->img->local_color_table_flag) {
       print_color_table(fp, framep->img->size_of_local_color_table, framep->img->local_color_table, "Local Color Table");

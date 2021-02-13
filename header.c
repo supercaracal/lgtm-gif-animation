@@ -4,7 +4,7 @@
 #include "constant.h"
 #include "tool.h"
 
-void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
+void read_gif_header(BinData *bytesp, GIFHeader *hp) {
   int i;
   unsigned char bits;
 
@@ -57,7 +57,7 @@ void read_gif_header(struct gif_bytes *bytesp, struct gif_header *hp) {
   }
 }
 
-void write_gif_header(FILE *fp, const struct gif_header *hp) {
+void write_gif_header(FILE *fp, const GIFHeader *hp) {
   fprintf(fp, "Headers\n");
   fprintf(fp, "  Signature: %s\n", hp->signature);
   fprintf(fp, "  Version: %s\n", hp->version);
@@ -78,6 +78,6 @@ void write_gif_header(FILE *fp, const struct gif_header *hp) {
   }
 }
 
-void free_gif_header(struct gif_header *hp) {
+void free_gif_header(GIFHeader *hp) {
   if (hp->global_color_table_flag) free(hp->global_color_table);
 }

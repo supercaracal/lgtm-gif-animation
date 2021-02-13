@@ -3,14 +3,14 @@
 #include "tool.h"
 #include "block_frame.h"
 
-void concat_img_block(struct gif_bytes *, struct gif_block_image *, int);
+void extract_img_block(BinData *, BinData *, int);
 
-struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_block_frame *framep) {
+GIFBlockFrame *read_gif_block_img(BinData *bytesp, GIFBlockFrame *framep) {
   unsigned char bits;
   int i, block_size;
 
   if (framep->img != NULL) framep = add_frame(framep);
-  framep->img = (struct gif_block_image *) malloc(sizeof(struct gif_block_image));
+  framep->img = (GIFBlockImage *) malloc(sizeof(GIFBlockImage));
   if (framep->img == NULL) {
     die("[ERROR] could not allocate memory for gif image block");
   }
@@ -46,29 +46,29 @@ struct gif_block_frame *read_gif_block_img(struct gif_bytes *bytesp, struct gif_
 
   framep->img->lzw_minimum_code_size = bytesp->buf[bytesp->idx++];
 
-  framep->img->data_size = 0;
-  framep->img->data_idx = 0;
-  framep->img->data = NULL;
+  framep->img->lzw_data.size = 0;
+  framep->img->lzw_data.idx = 0;
+  framep->img->lzw_data.buf = NULL;
   while ((block_size = bytesp->buf[bytesp->idx++]) != 0) {
-    concat_img_block(bytesp, framep->img, block_size);
+    extract_img_block(bytesp, &framep->img->lzw_data, block_size);
   }
 
   return framep;
 }
 
-void concat_img_block(struct gif_bytes *b, struct gif_block_image *i, int size) {
+void extract_img_block(BinData *b, BinData *d, int size) {
   void *p;
 
-  i->data_size += size;
+  d->size += size;
 
-  if (i->data == NULL) {
-    p = malloc(sizeof(unsigned char) * i->data_size);
+  if (d->buf == NULL) {
+    p = malloc(sizeof(unsigned char) * d->size);
   } else {
-    p = realloc(i->data, sizeof(unsigned char) * i->data_size);
+    p = realloc(d->buf, sizeof(unsigned char) * d->size);
   }
 
   if (p == NULL) die("[ERROR] could not allocate memory for lzw data");
-  i->data = (unsigned char *) p;
+  d->buf = (unsigned char *) p;
 
-  while (size--) i->data[i->data_idx++] = b->buf[b->idx++];
+  while (size--) d->buf[d->idx++] = b->buf[b->idx++];
 }

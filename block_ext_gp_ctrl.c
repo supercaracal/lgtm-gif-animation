@@ -3,11 +3,11 @@
 #include "tool.h"
 #include "block_frame.h"
 
-struct gif_block_frame *read_gif_block_ext_graph_ctrl(struct gif_bytes *bytesp, struct gif_block_frame *framep) {
+GIFBlockFrame *read_gif_block_ext_graph_ctrl(BinData *bytesp, GIFBlockFrame *framep) {
   unsigned char bits;
 
   if (framep->ctrl != NULL) framep = add_frame(framep);
-  framep->ctrl = (struct gif_block_ext_gp_ctrl *) malloc(sizeof(struct gif_block_ext_gp_ctrl));
+  framep->ctrl = (GIFBlockExtGpCtrl *) malloc(sizeof(GIFBlockExtGpCtrl));
   if (framep->ctrl == NULL) {
     die("[ERROR] could not allocate memory for gif graphic control extension");
   }

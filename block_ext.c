@@ -6,7 +6,7 @@
 #include "block_ext_comment.h"
 #include "block_ext_plain_text.h"
 
-struct gif_block_frame *read_gif_block_ext(struct gif_bytes *bytesp, struct gif_block_frame *framep, struct gif_block_ext_app *appp) {
+GIFBlockFrame *read_gif_block_ext(BinData *bytesp, GIFBlockFrame *framep, GIFBlockExtApp *appp) {
     switch (bytesp->buf[bytesp->idx++]) {
       case GIF_EXT_LABEL_GRAPH_CTRL:
         framep = read_gif_block_ext_graph_ctrl(bytesp, framep);

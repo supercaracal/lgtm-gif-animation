@@ -1,13 +1,13 @@
 #ifndef TYPE_H_
 #define TYPE_H_
 
-struct gif_bytes {
+typedef struct {
   unsigned char *buf;
   int size;
   int idx;
-};
+} BinData;
 
-struct gif_header {
+typedef struct {
   char signature[4];
   char version[4];
   unsigned int logical_screen_width;
@@ -19,16 +19,16 @@ struct gif_header {
   unsigned char background_color_index;
   unsigned char pixel_aspect_ratio;
   unsigned int *global_color_table;
-};
+} GIFHeader;
 
-struct gif_block_ext_app {
+typedef struct {
   unsigned char block_size;
   char application_identifier[9];
   char application_authentication_code[4];
   char read_flag;
-};
+} GIFBlockExtApp;
 
-struct gif_block_ext_gp_ctrl {
+typedef struct {
   unsigned char block_size;
   unsigned char reserved;
   unsigned char disposal_method;
@@ -36,9 +36,9 @@ struct gif_block_ext_gp_ctrl {
   unsigned char transparent_color_flag;
   unsigned int delay_time;
   unsigned char transparent_color_index;
-};
+} GIFBlockExtGpCtrl;
 
-struct gif_block_image {
+typedef struct {
   unsigned int image_left_position;
   unsigned int image_top_position;
   unsigned int image_witdh;
@@ -50,15 +50,14 @@ struct gif_block_image {
   int size_of_local_color_table;
   unsigned int *local_color_table;
   unsigned char lzw_minimum_code_size;
-  int data_size;
-  int data_idx;
-  unsigned char *data;
-};
+  BinData lzw_data;
+  BinData raw_data;
+} GIFBlockImage;
 
-struct gif_block_frame {
-  struct gif_block_ext_gp_ctrl *ctrl;
-  struct gif_block_image *img;
+typedef struct gif_block_frame {
+  GIFBlockExtGpCtrl *ctrl;
+  GIFBlockImage *img;
   struct gif_block_frame *next;
-};
+} GIFBlockFrame;
 
 #endif  // TYPE_H_

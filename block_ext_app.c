@@ -1,7 +1,7 @@
 #include "block_ext_app.h"
 #include "tool.h"
 
-void read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *appp) {
+void read_gif_block_ext_app(BinData *bytesp, GIFBlockExtApp *appp) {
   int i, block_size;
 
   appp->block_size = bytesp->buf[bytesp->idx++];
@@ -27,7 +27,7 @@ void read_gif_block_ext_app(struct gif_bytes *bytesp, struct gif_block_ext_app *
   appp->read_flag = 1;
 }
 
-void write_gif_ext_app(FILE *fp, const struct gif_block_ext_app *appp) {
+void write_gif_ext_app(FILE *fp, const GIFBlockExtApp *appp) {
   if (!appp->read_flag) return;
   fprintf(fp, "Application Extension:\n");
   fprintf(fp, "  Block Size: %u\n", appp->block_size);

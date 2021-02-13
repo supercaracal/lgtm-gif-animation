@@ -3,6 +3,6 @@
 
 #include "./type.h"
 
-void read_gif_block_ext_comment(struct gif_bytes *);
+void read_gif_block_ext_comment(BinData *);
 
 #endif  // BLOCK_EXT_COMMENT_H_

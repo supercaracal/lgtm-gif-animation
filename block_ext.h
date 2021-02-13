@@ -3,6 +3,6 @@
 
 #include "./type.h"
 
-struct gif_block_frame *read_gif_block_ext(struct gif_bytes *, struct gif_block_frame *, struct gif_block_ext_app *);
+GIFBlockFrame *read_gif_block_ext(BinData *, GIFBlockFrame *, GIFBlockExtApp *);
 
 #endif  // BLOCK_EXT_H_

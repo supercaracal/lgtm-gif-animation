@@ -11,10 +11,10 @@
 int main(int argc, char **argv) {
   FILE *fp;
   int n;
-  struct gif_bytes bytes;
-  struct gif_header h;
-  struct gif_block_frame first_frame;
-  struct gif_block_ext_app app;
+  BinData bytes;
+  GIFHeader h;
+  GIFBlockFrame first_frame;
+  GIFBlockExtApp app;
 
   if (argc == 1) {
     fp = stdin;

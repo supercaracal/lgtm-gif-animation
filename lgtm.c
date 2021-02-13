@@ -3,7 +3,7 @@
 #include "constant.h"
 #include "tool.h"
 
-void append_lgtm_bytes(struct gif_bytes *bytesp, struct gif_header *hp) {
+void append_lgtm_bytes(BinData *bytesp, GIFHeader *hp) {
   unsigned int total_size, i, left, top;
   void *p;
   unsigned char lgtm_colors[GIF_LGTM_DATA_COLORS_SIZE] = GIF_LGTM_DATA_COLORS;

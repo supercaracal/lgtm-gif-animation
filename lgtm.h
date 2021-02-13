@@ -3,6 +3,6 @@
 
 #include "./type.h"
 
-void append_lgtm_bytes(struct gif_bytes *, struct gif_header *);
+void append_lgtm_bytes(BinData *, GIFHeader *);
 
 #endif  // LGTM_H_
