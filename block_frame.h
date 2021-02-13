@@ -3,7 +3,7 @@
 
 #include "./type.h"
 
-struct gif_block_frame *add_frame(struct gif_block_frame *);
-void free_gif_frames(struct gif_block_frame *);
+GIFBlockFrame *add_frame(GIFBlockFrame *);
+void free_gif_frames(GIFBlockFrame *);
 
 #endif  // BLOCK_FRAME_H_
