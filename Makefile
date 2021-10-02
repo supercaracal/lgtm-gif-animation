@@ -1,9 +1,23 @@
 MAKEFLAGS += --warn-undefined-variables
 SHELL     := /bin/bash -euo pipefail
 CC        ?= gcc
-CFLAGS    += -std=c11 -D_POSIX_C_SOURCE=200809
-CFLAGS    += -Wall -Wextra -Wpedantic -Wundef
-SRCS      := block block_ext block_ext_app block_ext_comment block_ext_gp_ctrl block_ext_plain_text block_frame block_image header lgtm tool
+CFLAGS    += -std=c11
+CFLAGS    += -D_POSIX_C_SOURCE=200809
+CFLAGS    += -Wall
+CFLAGS    += -Wextra
+CFLAGS    += -Wpedantic
+CFLAGS    += -Wundef
+SRCS      += block
+SRCS      += block_ext
+SRCS      += block_ext_app
+SRCS      += block_ext_comment
+SRCS      += block_ext_gp_ctrl
+SRCS      += block_ext_plain_text
+SRCS      += block_frame
+SRCS      += block_image
+SRCS      += header
+SRCS      += lgtm
+SRCS      += tool
 OBJS      := $(addsuffix .o,$(SRCS))
 
 define link
