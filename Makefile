@@ -1,11 +1,10 @@
-SHELL := /bin/bash
-CC    ?= gcc
-
-CFLAGS += -std=c11 -D_POSIX_C_SOURCE=200809
-CFLAGS += -Wall -Wextra -Wpedantic -Wundef
-
-SRCS := block block_ext block_ext_app block_ext_comment block_ext_gp_ctrl block_ext_plain_text block_frame block_image header lgtm tool
-OBJS := $(addsuffix .o,$(SRCS))
+MAKEFLAGS += --warn-undefined-variables
+SHELL     := /bin/bash -euo pipefail
+CC        ?= gcc
+CFLAGS    += -std=c11 -D_POSIX_C_SOURCE=200809
+CFLAGS    += -Wall -Wextra -Wpedantic -Wundef
+SRCS      := block block_ext block_ext_app block_ext_comment block_ext_gp_ctrl block_ext_plain_text block_frame block_image header lgtm tool
+OBJS      := $(addsuffix .o,$(SRCS))
 
 define link
 	$(strip $(LINK.o)) $^ $(LOADLIBES) $(LDLIBS) -o $@
