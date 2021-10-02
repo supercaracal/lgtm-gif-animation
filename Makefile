@@ -1,24 +1,29 @@
-MAKEFLAGS += --warn-undefined-variables
-SHELL     := /bin/bash -euo pipefail
-CC        ?= gcc
-CFLAGS    += -std=c11
-CFLAGS    += -D_POSIX_C_SOURCE=200809
-CFLAGS    += -Wall
-CFLAGS    += -Wextra
-CFLAGS    += -Wpedantic
-CFLAGS    += -Wundef
-SRCS      += block
-SRCS      += block_ext
-SRCS      += block_ext_app
-SRCS      += block_ext_comment
-SRCS      += block_ext_gp_ctrl
-SRCS      += block_ext_plain_text
-SRCS      += block_frame
-SRCS      += block_image
-SRCS      += header
-SRCS      += lgtm
-SRCS      += tool
-OBJS      := $(addsuffix .o,$(SRCS))
+MAKEFLAGS   += --warn-undefined-variables
+SHELL       := /bin/bash -euo pipefail
+CC          ?= gcc
+CFLAGS      += -std=c11
+CFLAGS      += -D_POSIX_C_SOURCE=200809
+CFLAGS      += -Wall
+CFLAGS      += -Wextra
+CFLAGS      += -Wpedantic
+CFLAGS      += -Wundef
+CPPFLAGS    ?=
+TARGET_ARCH ?=
+LOADLIBES   ?=
+LDFLAGS     ?=
+LDLIBS      ?=
+SRCS        += block
+SRCS        += block_ext
+SRCS        += block_ext_app
+SRCS        += block_ext_comment
+SRCS        += block_ext_gp_ctrl
+SRCS        += block_ext_plain_text
+SRCS        += block_frame
+SRCS        += block_image
+SRCS        += header
+SRCS        += lgtm
+SRCS        += tool
+OBJS        := $(addsuffix .o,$(SRCS))
 
 define link
 	$(strip $(LINK.o)) $^ $(LOADLIBES) $(LDLIBS) -o $@
